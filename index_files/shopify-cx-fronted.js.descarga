@@ -1,0 +1,2011 @@
+var couponapp_domain = "https://coupon-x.premio.io/",
+fullpathName = window.location.href,
+path_name = window.location.pathname,
+path_name = path_name.substr(1),
+shopurl = Shopify.shop,
+couponapp_html = "",
+couponapp_settings = '',
+updatecount = 0,
+country_name = "",
+currentCountryCount = 0,
+couponapp_storeid = 0,
+isowner = 'no',
+is_updatevisitor = 0,
+couponapp,
+is_clipboard = 0,
+clipboard,
+myReferer='',
+unique_code='',
+is_page_scroll_index = -1;
+var ab_widges_arr = [];
+var timeInterval='';
+var isCXMobile;
+var is_trigger_cart = false;
+(function(){
+	var loadScript = function(url, callback){
+		var script = document.createElement("script");
+		script.type = "text/javascript";
+
+		// If the browser is Internet Explorer.
+		if (script.readyState){
+
+			script.onreadystatechange = function(){
+				if (script.readyState == "loaded" || script.readyState == "complete"){
+					script.onreadystatechange = null;
+					callback();
+				}
+			};
+			// For any other browser.
+		} else {
+			script.onload = function(){
+				callback();
+			};
+		}
+		script.src = url;
+		document.getElementsByTagName("head")[0].appendChild(script);
+	};
+
+	var CouponAppJavaScript = function(jQuery, show_widget = false){
+		
+		var shopify_coupon_domain = window.location.hostname;
+		var customerId = window.ShopifyAnalytics.meta.page.customerId;
+		if ( typeof customerId == 'undefined' ) {
+			if (typeof Shopify.checkout != 'undefined' ) {
+				customerId = Shopify.checkout.customer_id;
+			}
+			if ( typeof customerId == 'undefined' ) {
+				customerId = 0;
+			}
+		}
+		var origin_landing_page   = window.location.href;
+		if (document.referrer) {
+			myReferer = document.referrer;
+		}
+
+		// Temporary close for flow execution 22/12/2022
+		if (jQuery('link#couponx-front-css').length == 0 ) {
+			jQuery('head').append('<link id="couponx-front-css" rel="stylesheet" href="'+couponapp_domain+'assets/css/coupon-front.css" type="text/css" media="all">');
+			//jQuery('head').append('<script id="couponx-clipboard-js" type="text/javascript" async="" src="'+couponapp_domain+'assets/js/clipboard.min.js"></script>');
+			jQuery('head').append('<script id="couponx-left-timer-script-js" type="text/javascript" async="" src="'+couponapp_domain+'assets/js/left-timer-script-frnt.js"></script>');
+		}
+
+
+		isCXMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? true : false;
+		var isbotuser = 'no';
+		var botPattern = "(googlebot\/|bot|Googlebot-Mobile|Googlebot-Image|Google favicon|Mediapartners-Google|bingbot|slurp|java|wget|curl|Commons-HttpClient|Python-urllib|libwww|httpunit|nutch|phpcrawl|msnbot|jyxobot|FAST-WebCrawler|FAST Enterprise Crawler|biglotron|teoma|convera|seekbot|gigablast|exabot|ngbot|ia_archiver|GingerCrawler|webmon |httrack|webcrawler|grub.org|UsineNouvelleCrawler|antibot|netresearchserver|speedy|fluffy|bibnum.bnf|findlink|msrbot|panscient|yacybot|AISearchBot|IOI|ips-agent|tagoobot|MJ12bot|dotbot|woriobot|yanga|buzzbot|mlbot|yandexbot|purebot|Linguee Bot|Voyager|CyberPatrol|voilabot|baiduspider|citeseerxbot|spbot|twengabot|postrank|turnitinbot|scribdbot|page2rss|sitebot|linkdex|Adidxbot|blekkobot|ezooms|dotbot|Mail.RU_Bot|discobot|heritrix|findthatfile|europarchive.org|NerdByNature.Bot|sistrix crawler|ahrefsbot|Aboundex|domaincrawler|wbsearchbot|summify|ccbot|edisterbot|seznambot|ec2linkfinder|gslfbot|aihitbot|intelium_bot|facebookexternalhit|yeti|RetrevoPageAnalyzer|lb-spider|sogou|lssbot|careerbot|wotbox|wocbot|ichiro|DuckDuckBot|lssrocketcrawler|drupact|webcompanycrawler|acoonbot|openindexspider|gnam gnam spider|web-archive-net.com.bot|backlinkcrawler|coccoc|integromedb|content crawler spider|toplistbot|seokicks-robot|it2media-domain-crawler|ip-web-crawler.com|siteexplorer.info|elisabot|proximic|changedetection|blexbot|arabot|WeSEE:Search|niki-bot|CrystalSemanticsBot|rogerbot|360Spider|psbot|InterfaxScanBot|Lipperhey SEO Service|CC Metadata Scaper|g00g1e.net|GrapeshotCrawler|urlappendbot|brainobot|fr-crawler|binlar|SimpleCrawler|Livelapbot|Twitterbot|cXensebot|smtbot|bnf.fr_bot|A6-Indexer|ADmantX|Facebot|Twitterbot|OrangeBot|memorybot|AdvBot|MegaIndex|SemanticScholarBot|ltx71|nerdybot|xovibot|BUbiNG|Qwantify|archive.org_bot|Applebot|TweetmemeBot|crawler4j|findxbot|SemrushBot|yoozBot|lipperhey|y!j-asr|Domain Re-Animator Bot|AddThis)";
+
+		var re = new RegExp(botPattern, 'i');
+		var userAgent = navigator.userAgent;
+		if ( re.test(userAgent) ) {
+			isbotuser = 'yes';
+		}
+
+		var $style = '';
+
+		var couponappurl = couponapp_domain + 'front/couponxappfront?fullpathName='+encodeURI(fullpathName);
+
+		/* Count App */
+		var countcouponapp = readCouponappCookie('countcouponapp');
+		if (countcouponapp != 'dismiss'){
+			updatecount = 1;
+		}
+
+		var traffic_source = readCouponappCookie('traffic_source');
+
+		/* Get all cookies of browesr and filter coupon cookies*/
+
+		var cookies = document.cookie.split(';').reduce(
+		(cookies, cookie) => {
+			const [name, val] = cookie.split('=').map(c => c.trim());
+			cookies[name] = val;
+			return cookies;
+		}, {});
+
+		var unique_codes = {};
+		jQuery.each(cookies, function (key,val) {
+			key = jQuery.trim(key);
+			if (key.indexOf('couponx_unique-') == 0) {
+			   unique_codes[key] = val;
+			}
+		});
+
+		unique_code = unique_codes;
+
+		/* Check is Owner*/
+		var couponappisowner = jQuery('#admin-bar-iframe').html();
+		if(couponappisowner !== undefined){
+			isowner = 'yes';
+			createCouponappCookie('couponappisowner', 'yes', 1000);
+		}
+		/* Check App Owner Cookie */
+		var couponappisownerCookie = readCouponappCookie('couponappisowner');
+		if (couponappisownerCookie == 'yes'){
+			isowner = 'yes';
+		}
+
+		if(isbotuser == 'no'){
+			var previous_cart_items = '';
+			if ( localStorage.getItem( 'CX_shopify_cart_response' ) != '' ) {
+				previous_cart_items = localStorage.getItem( 'CX_shopify_cart_response' );
+			}
+
+			var CX_shopify_show_widget = '';
+			if ( localStorage.getItem( 'CX_shopify_show_widget' ) != '' ) {
+				CX_shopify_show_widget = localStorage.getItem( 'CX_shopify_show_widget' );
+			}
+
+         	jQuery.get( 'https://'+shopify_coupon_domain+"/cart.json", function( cart_response ) {
+		    var coupon_ab_widgets = readCouponappCookie('couponx_ab_widget');
+			if ( cart_response.items != '') {
+				var cart_items_ids = [];
+				jQuery.each(cart_response.items, function(index, value) {
+					cart_items_ids.push(value.product_id);
+					localStorage.setItem( 'CX_shopify_cart_response', JSON.stringify(cart_items_ids));
+				});
+			}
+			var shopurl = Shopify.shop;			
+            jQuery.ajax({
+					type: "POST",
+					url: couponappurl,
+					data: {
+							'shop_url'				: shopurl,
+							'isCXMobile' 				: isCXMobile,
+							'pathName' 				: path_name,
+							'updatecount'			: updatecount,
+							'isowner'				: isowner,
+							'cart_data'				: cart_response,
+							'customerId'			: customerId,
+							'origin_landing_page'	: origin_landing_page,
+							'HTTP_REFERER'			: myReferer,
+							'traffic_source'		: traffic_source,
+							'is_unique_code'		: (unique_code) ? unique_code : array(),
+							'is_ab_widges' 			: ( coupon_ab_widgets != '' ) ? coupon_ab_widgets : '',
+							'previous_cart_items' 	: previous_cart_items,
+							'show_widget' 			: CX_shopify_show_widget,
+						},
+					dataType: "JSON",
+					success: function (response) {
+
+						jQuery('.tab-box.tab-front-box ').remove();
+						if(response.trigger_cart == true ) {
+							is_trigger_cart = true;
+						}
+						/*
+						if ( response == '') {
+							return true;
+						}
+						*/						
+						if( typeof response.couponapp_widgets != 'undefined' &&  response.couponapp_widgets.length > 0) {
+
+							couponx_loadGoogleFonts(jQuery);
+							couponapp_settings = response;
+							var page_scroll_index;
+							var local_widget_ids = [];
+
+							for( currentCountryCount = 0 ;
+								 currentCountryCount < response.couponapp_widgets.length ; currentCountryCount++ ) {
+								var widget_id = response.couponapp_widgets[currentCountryCount].widget_id;
+
+								if ( response.couponapp_widgets[currentCountryCount].cart_targeting == true ) {
+									local_widget_ids.push(widget_id);
+									localStorage.setItem( 'CX_shopify_show_widget', JSON.stringify(local_widget_ids));
+									if ( response.couponapp_widgets[currentCountryCount].dont_show == true ) {
+										continue;
+									}
+								}
+
+								var discount_code = response.couponapp_widgets[currentCountryCount].unique_code;
+								if ( discount_code != '') {
+									createCouponappCookie('couponx_unique-'+widget_id, discount_code, 365);
+								}
+
+								if ( couponapp_settings.couponapp_widgets[currentCountryCount].is_traffic_source !='' && traffic_source == null ) {
+									createCouponappCookie('traffic_source', couponapp_settings.couponapp_widgets[currentCountryCount].is_traffic_source, 1);
+								}
+
+								var couponapp_scroll = sessionStorage.getItem(currentCountryCount + 'couponapp_scroll');
+								var couponapp_show = sessionStorage.getItem(currentCountryCount + 'couponapp_show');
+								if ( couponapp_settings.couponapp_widgets[currentCountryCount].page_scroll === 'yes' && couponapp_scroll != 'yes' && couponapp_show != 'yes' ) {
+									page_scroll_functions( jQuery,currentCountryCount );
+								}
+
+								if ( couponapp_settings.couponapp_widgets[currentCountryCount].time_delay === 'yes' && couponapp_show != 'yes' && show_widget == false) {
+									var trigger_sec = couponapp_settings.couponapp_widgets[currentCountryCount].time_delay_sec * 1000;
+									if ( trigger_sec == 0 ) {
+										trigger_sec = 100;
+									}
+
+									page_scroll_index = currentCountryCount;
+									check_for_widget_data(jQuery,page_scroll_index);
+
+									var show_widget_after_some_time = function(page_scroll_index, jQuery){
+										var tab_id = 'tab-box-front-' + page_scroll_index;
+										var widget_tab = 'tab-box-front-' + widget_id;
+										var widget_tab_class = 'tab-box-front-wid-' + widget_id;
+
+										if(!isCXMobile && jQuery("#"+tab_id).hasClass("couponapp-desktop")){
+											jQuery( '#' + tab_id ).show();
+										}else if(isCXMobile && jQuery("#"+tab_id).hasClass("couponapp-mobile")){
+											jQuery( '#' + tab_id ).show();
+										}else{
+											jQuery( '#' + tab_id ).hide();
+										}
+
+										sessionStorage.setItem( page_scroll_index + 'couponapp_show', 'yes');
+
+										/* Hide Tab after conversation */
+										if ( localStorage.getItem(widget_tab + '-couponapp_tab_hide') == 'yes' &&  jQuery( '#' + tab_id ).hasClass( 'couponapp-tab-hide' ) ) {
+											jQuery( '.' + widget_tab_class ).hide();
+										}
+									};
+									setTimeout(show_widget_after_some_time, trigger_sec, page_scroll_index, jQuery);
+
+								} else {
+									check_for_widget_data(jQuery,currentCountryCount);
+									var tab_id = 'tab-box-front-' + currentCountryCount;
+									var widget_tab = 'tab-box-front-' + widget_id;
+									var widget_tab_class = 'tab-box-front-wid-' + widget_id;
+
+									/* Date: 03/01/2023
+										This script condition hide for the reason of conflit with trigger targeting event */
+
+									// if(!isCXMobile && jQuery("#"+tab_id).hasClass("couponapp-desktop")){
+									// 	jQuery( '#' + tab_id ).show();
+									// }else if(isCXMobile && jQuery("#"+tab_id).hasClass("couponapp-mobile")){
+									// 	jQuery( '#' + tab_id ).show();
+									// }
+
+									if ( show_widget == true  || couponapp_show == 'yes') {
+										createCouponappCookie('couponx-exist-'+ widget_id, 'yes' , 1);
+										if(!isCXMobile && jQuery("#"+tab_id).hasClass("couponapp-desktop")){
+											jQuery( '#' + tab_id ).show();
+										}else if(isCXMobile && jQuery("#"+tab_id).hasClass("couponapp-mobile")){
+											jQuery( '#' + tab_id ).show();
+										}
+									}
+
+									/* Hide Tab after conversation */
+									if ( localStorage.getItem(widget_tab + '-couponapp_tab_hide') == 'yes' &&  jQuery( '#' + tab_id ).hasClass( 'couponapp-tab-hide' ) ) {
+										jQuery( '.' + widget_tab_class ).hide();
+									}
+								}
+							}
+						}
+					}
+				});
+			});
+
+         /* End Cart json */
+		}
+	};
+	
+	var couponx_loadGoogleFonts = function(jQuery) {
+		
+		var fontFamilyObject={"'Aclonica'":"Aclonica","'Alef'":"Alef","'Allan'":"Allan","'Allerta Stencil'":"Allerta Stencil","'Allerta'":"Allerta","'Amaranth'":"Amaranth","'Amatica SC'":"Amatica SC","'Annie Use Your Telescope'":"Annie Use Your Telescope","'Anonymous Pro'":"Anonymous Pro","'Anton'":"Anton","'Architects Daughter'":"Architects Daughter","'Arimo'":"Arimo","'Artifika'":"Artifika","'Arvo'":"Arvo","'Asap'":"Asap","'Asset'":"Asset","'Assistant'":"Assistant","'Astloch'":"Astloch","'Bangers'":"Bangers","'Bentham'":"Bentham","'Bevan'":"Bevan","'Bigshot One'":"Bigshot One","'Bowlby One SC'":"Bowlby One SC","'Bowlby One'":"Bowlby One","'Brawler'":"Brawler","'Cabin'":"Cabin","'Calligraffitti'":"Calligraffitti","'Candal'":"Candal","'Cantarell'":"Cantarell","'Cardo'":"Cardo","'Carter One'":"Carter One","'Caudex'":"Caudex","'Cedarville Cursive'":"Cedarville Cursive","'Cherry Cream Soda'":"Cherry Cream Soda","'Chewy'":"Chewy","'Coda'":"Coda","'Coming Soon'":"Coming Soon","'Copse'":"Copse","'Corben'":"Corben","'Cousine'":"Cousine","'Covered By Your Grace'":"Covered By Your Grace","'Crafty Girls'":"Crafty Girls","'Crimson Text'":"Crimson Text","'Crushed'":"Crushed","'Cuprum'":"Cuprum","'Damion'":"Damion","'Dancing Script'":"Dancing Script","'David Libre'":"David Libre","'Dawning of a New Day'":"Dawning of a New Day","'Didact Gothic'":"Didact Gothic","'DM Sans'":"DM Sans","'Dosis'":"Dosis","'Droid Sans'":"Droid Sans","'Droid Sans Mono'":"Droid Sans Mono","'Droid Serif'":"Droid Serif","'DM Serif Display'":"DM Serif Display","'EB Garamond'":"EB Garamond","'Exo'":"Exo","'Expletus Sans'":"Expletus Sans","'Fontdiner Swanky'":"Fontdiner Swanky","'Forum'":"Forum","'Francois One'":"Francois One","'Frank Ruhl Libre'":"Frank Ruhl Libre","'Geo'":"Geo","'Give You Glory'":"Give You Glory","'Goblin One'":"Goblin One","'Goudy Bookletter 1911'":"Goudy Bookletter 1911","'Gravitas One'":"Gravitas One","'Gruppo'":"Gruppo","'Hammersmith One'":"Hammersmith One","'Heebo'":"Heebo","'Holtwood One SC'":"Holtwood One SC","'Homemade Apple'":"Homemade Apple","'Inconsolata'":"Inconsolata","'Indie Flower'":"Indie Flower","'IM Fell DW Pica'":"IM Fell DW Pica","'IM Fell DW Pica SC'":"IM Fell DW Pica SC","'IM Fell Double Pica'":"IM Fell Double Pica","'IM Fell Double Pica SC'":"IM Fell Double Pica SC","'IM Fell English'":"IM Fell English","'IM Fell English SC'":"IM Fell English SC","'IM Fell French Canon'":"IM Fell French Canon","'IM Fell French Canon SC'":"IM Fell French Canon SC","'IM Fell Great Primer'":"IM Fell Great Primer","'IM Fell Great Primer SC'":"IM Fell Great Primer SC","'Irish Grover'":"Irish Grover","'Irish Growler'":"Irish Growler","'Istok Web'":"Istok Web","'Josefin Sans'":"Josefin Sans","'Josefin Slab'":"Josefin Slab","'Judson'":"Judson","'Jura'":"Jura","'Just Another Hand'":"Just Another Hand","'Just Me Again Down Here'":"Just Me Again Down Here","'Kameron'":"Kameron","'Kenia'":"Kenia","'Kranky'":"Kranky","'Kreon'":"Kreon","'Kristi'":"Kristi","'La Belle Aurore'":"La Belle Aurore","'Lato'":"Lato","'League Script'":"League Script","'Lekton'":"Lekton","'Libre Baskerville'":"Libre Baskerville","'Limelight'":"Limelight","'Lobster'":"Lobster","'Lobster Two'":"Lobster Two","'Lora'":"Lora","'Love Ya Like A Sister'":"Love Ya Like A Sister","'Loved by the King'":"Loved by the King","'Luckiest Guy'":"Luckiest Guy","'Maiden Orange'":"Maiden Orange","'Mako'":"Mako","'Maven Pro'":"Maven Pro","'Meddon'":"Meddon","'MedievalSharp'":"MedievalSharp","'Megrim'":"Megrim","'Merriweather'":"Merriweather","'Metrophobic'":"Metrophobic","'Michroma'":"Michroma","'Miltonian Tattoo'":"Miltonian Tattoo","'Miltonian'":"Miltonian","'Miriam Libre'":"Miriam Libre","'Modern Antiqua'":"Modern Antiqua","'Molengo'":"Molengo","'Monofett'":"Monofett","'Montserrat'":"Montserrat","'Mountains of Christmas'":"Mountains of Christmas","'Muli'":"Muli","'Neucha'":"Neucha","'Neuton'":"Neuton","'News Cycle'":"News Cycle","'Nixie One'":"Nixie One","'Nobile'":"Nobile","'Nova Cut'":"Nova Cut","'Nova Flat'":"Nova Flat","'Nova Mono'":"Nova Mono","'Nova Oval'":"Nova Oval","'Nova Round'":"Nova Round","'Nova Script'":"Nova Script","'Nova Slim'":"Nova Slim","'Nova Square'":"Nova Square","'Nunito:light'":"Nunito:light","'Nunito'":"Nunito","'Nunito Sans'":"Nunito Sans","'OFL Sorts Mill Goudy TT'":"OFL Sorts Mill Goudy TT","'Old Standard TT'":"Old Standard TT","'Open Sans'":"Open Sans","'Open Sans Condensed:300'":"Open Sans Condensed","'Open Sans Hebrew'":"Open Sans Hebrew","'Orbitron'":"Orbitron","'Oswald'":"Oswald","'Over the Rainbow'":"Over the Rainbow","'Pacifico'":"Pacifico","'Patrick Hand'":"Patrick Hand","'Paytone One'":"Paytone One","'Permanent Marker'":"Permanent Marker","'Philosopher'":"Philosopher","'Play'":"Play","'Playfair Display'":"Playfair Display","'Podkova'":"Podkova","'Poppins'":"Poppins","'PT Sans'":"PT Sans","'PT Sans Narrow'":"PT Sans Narrow","'PT Sans Narrow:regular,bold'":"PT Sans Narrow:regular,bold","'PT Serif'":"PT Serif","'PT Serif Caption'":"PT Serif Caption","'Puritan'":"Puritan","'Quattrocento'":"Quattrocento","'Quattrocento Sans'":"Quattrocento Sans","'Quicksand'":"Quicksand","'Radley'":"Radley","'Raleway'":"Raleway","'Redressed'":"Redressed","'Reenie Beanie'":"Reenie Beanie","'Rock Salt'":"Rock Salt","'Rokkitt'":"Rokkitt","'Roboto'":"Roboto","'Rubik'":"Rubik","'Ruslan Display'":"Ruslan Display","'Schoolbell'":"Schoolbell","'Secular One'":"Secular One","'Shadows Into Light'":"Shadows Into Light","'Shanti'":"Shanti","'Sigmar One'":"Sigmar One","'Six Caps'":"Six Caps","'Slackey'":"Slackey","'Smythe'":"Smythe","'Source Sans Pro'":"Source Sans Pro","'Special Elite'":"Special Elite","'Stardos Stencil'":"Stardos Stencil","'Sue Ellen Francisco'":"Sue Ellen Francisco","'Suez One'":"Suez One","'Sunshiney'":"Sunshiney","'Swanky and Moo Moo'":"Swanky and Moo Moo","'Syncopate'":"Syncopate","'Tangerine'":"Tangerine","'Tenor Sans'":"Tenor Sans","'Terminal Dosis Light'":"Terminal Dosis Light","'The Girl Next Door'":"The Girl Next Door","'Tinos'":"Tinos","'Ubuntu'":"Ubuntu","'Ultra'":"Ultra","'Unkempt'":"Unkempt","'UnifrakturCook:bold'":"UnifrakturCook:bold","'UnifrakturMaguntia'":"UnifrakturMaguntia","'Varela'":"Varela","'Varela Round'":"Varela Round","'Vibur'":"Vibur","'Vollkorn'":"Vollkorn","'VT323'":"VT323","'Waiting for the Sunrise'":"Waiting for the Sunrise","'Wallpoet'":"Wallpoet","'Walter Turncoat'":"Walter Turncoat","'Wire One'":"Wire One","'Yanone Kaffeesatz'":"Yanone Kaffeesatz","'Yeseva One'":"Yeseva One","'Zeyada'":"Zeyad","'Zilla Slab'":"Zilla Slab"};
+		
+		var fontFamilyArray = Object.keys(fontFamilyObject);
+		var all_fonts = '';
+		
+		for (let index = 0; index < fontFamilyArray.length; index++) {
+			this_font = fontFamilyArray[index].replace(/['"]+/g, '').replace(/ /g, '+');
+			if(this_font != 'Open+Sans+Hebrew'){				
+				if(index != 0) {all_fonts += '|'};
+				all_fonts += this_font;
+			}
+		}
+		jQuery('head').append('<link id="couponx-google-fonts" rel="stylesheet" style="text/css" href="https://fonts.googleapis.com/css?family='+all_fonts+'">');
+	}
+	var check_for_widget_data = function (jQuery, index) {
+        activeIndexID = index;
+		if( couponapp_settings.couponapp_widgets[index].maxvisitor && jQuery('link#custom-google-fonts-css').length == 0){
+
+			jQuery('head').append('<link rel="stylesheet" id="custom-google-fonts-css" href="https://fonts.googleapis.com/css?family=Poppins::200,300,400,500,600,700" type="text/css" media="all">');
+
+			jQuery('body').append(couponapp_settings.couponapp_widgets[index].maxvisitormessage);
+			couponapp_storeid = couponapp_settings.couponapp_widgets[index].storeid;
+		}
+
+		if( index < couponapp_settings.couponapp_widgets.length ) {
+            couponapp = {google_analytics:couponapp_settings.couponapp_widgets[index].google_analytics};
+
+            if ( typeof couponapp_settings.couponapp_widgets[index].countries !== 'undefined' && couponapp_settings.couponapp_widgets[index].countries.length > 0) {
+                if(country_name == "") {
+                    var $ipurl = 'https://www.cloudflare.com/cdn-cgi/trace';
+                    jQuery.get($ipurl, function (cloudflaredata) {
+                        var currentCountry = cloudflaredata.match("loc=(.*)");
+                        if (currentCountry.length > 1) {
+                            currentCountry = currentCountry[1];
+                            if (currentCountry) {
+                                currentCountry = currentCountry.toUpperCase();
+                                country_name = currentCountry;
+
+                                if (jQuery.inArray(currentCountry, couponapp_settings.couponapp_widgets[index].countries) != -1) {
+									set_widget_data(jQuery,index);
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    if (jQuery.inArray(country_name, couponapp_settings.couponapp_widgets[index].countries) != -1) {
+						set_widget_data(jQuery,index);
+                    }
+                }
+            } else {
+				set_widget_data(jQuery,index);
+            }
+		}
+
+    }
+
+	var set_widget_data = function (jQuery,activeIndexID) {
+		/* Check CTA Hide after First Click/Hover */
+		var tab_id = 'tab-box-front-' + activeIndexID;
+		var widget_id = couponapp_settings.couponapp_widgets[activeIndexID].widget_id;
+		var widget_tab = 'tab-box-front-wid-'+widget_id;
+
+		/* Remove Session Storage if always open class*/
+
+		if ( couponapp_settings.couponapp_widgets[activeIndexID].show_cta === 'always' ) {
+			sessionStorage.removeItem(tab_id + 'couponapp_close');
+		}
+
+        if (couponapp_settings.couponapp_widgets[activeIndexID].html != '' && check_for_time(activeIndexID)){
+
+			if ( couponapp_settings.couponapp_widgets[activeIndexID].widget_save == 1 ) {
+				localStorage.removeItem(tab_id + 'couponapp_close_widget');
+				sessionStorage.removeItem(tab_id + 'couponapp_close');
+				sessionStorage.removeItem(tab_id + 'couponapp_pending_message');
+				sessionStorage.removeItem(tab_id + 'couponapp_open');
+			}
+
+			var coupon_widget = couponapp_settings.couponapp_widgets[activeIndexID].html;
+			var exit_intent = couponapp_settings.couponapp_widgets[activeIndexID].exit_intent;
+			var time_delay = couponapp_settings.couponapp_widgets[activeIndexID].time_delay;
+			var page_scroll = couponapp_settings.couponapp_widgets[activeIndexID].page_scroll;
+
+			/* *** AB Testing *** */
+
+			if( couponapp_settings.couponapp_widgets[activeIndexID].is_ab == 1 ){
+				var ab_widget_frm_cookie = readCouponappCookie('couponx_ab_widget');
+				if( ab_widget_frm_cookie != '' && couponapp_settings.couponapp_widgets[activeIndexID].widget_id != ab_widget_frm_cookie ){
+					ab_widges_arr.push( couponapp_settings.couponapp_widgets[activeIndexID].widget_id );
+					createCouponappCookie( 'couponx_ab_widget', ab_widges_arr, 30 );
+					get_ab_widget_count( jQuery , activeIndexID);
+				}
+			}
+			/* *** End AB Testing *** */
+			if ( localStorage.getItem(tab_id + 'couponapp_close_widget') == 'yes' ) {
+				coupon_widget = coupon_widget.replace("couonapp-active", "");
+			}
+			jQuery('body').append(coupon_widget);
+			var widget_id = jQuery('#' + tab_id).data("widgetid");
+			var widget_tab = 'tab-box-front-' + widget_id;
+			var widget_tab_class = 'tab-box-front-wid-' + widget_id;
+			var exist_popup = readCouponappCookie('couponx-exist-'+ widget_id);
+			var couponapp_show = sessionStorage.getItem(activeIndexID + 'couponapp_show');
+
+			//if ( ( exit_intent == 'yes' && exist_popup == null) || ( ( page_scroll == '' && time_delay == '' ) || couponapp_show != 'yes' )) {
+			if ( exist_popup == null && ( exit_intent == 'yes' || page_scroll == '' && time_delay == '' || couponapp_show != 'yes' ) ) {
+				//console.log(1 + " Change == "+ couponapp_show + " == "+ exist_popup + " ==" + 'couponx-exist-'+ widget_id);
+				jQuery( '#' + tab_id ).hide();
+			}
+
+			/* Hide Tab after conversation */
+			if ( localStorage.getItem(widget_tab + '-couponapp_tab_hide') == 'yes' &&  jQuery( '#' + tab_id ).hasClass( 'couponapp-tab-hide' ) ) {
+				jQuery( '.' + widget_tab_class ).hide();
+			}
+
+			jQuery( '.tab-box.tab-front-box').each(function () {
+				var main_width = jQuery(this).find( '.tab-box-email-content .form-wrap').outerWidth();
+				var button_width = jQuery(this).find( '.coupon-button.coupon-email-button').outerWidth();
+				if ( ( typeof main_width !== 'undefined' && main_width != 0 ) && ( typeof button_width !== 'undefined' && button_width != 0) ) {
+					//jQuery(this).find('.coupon-code-email-text').width( main_width - button_width - 37 );
+					jQuery(this).find('.coupon-code-email-text').width( '100%' );
+				}
+			})
+
+			if ( readCouponappCookie(tab_id + 'show_coupon_code') == 'yes') {
+				jQuery( '#' + tab_id + ' .tab-box-content.tab-box-email-content').remove();
+				jQuery( '#' + tab_id + ' .tab-box-content.tab-box-couponcode-content').show();
+				jQuery( '#' + tab_id ).addClass( 'open-coupon-code');
+			}
+
+			var coupon_pending_message = sessionStorage.getItem(tab_id + 'couponapp_pending_message');
+
+			if ( coupon_pending_message === 'yes' || jQuery('#' + tab_id ).hasClass( 'couponapp-open-state-open' ) ) {
+				jQuery('#' + tab_id + ' .coupon-pending-message').remove();
+			}
+			if ( jQuery('#' + tab_id ).hasClass( 'couponapp-open-state-open' ) )  {
+				jQuery('#' + tab_id + ' .tab-text').hide();
+			}
+
+			if (jQuery('#' + tab_id ).hasClass( 'couponapp-open-state-open' ) &&  localStorage.getItem(tab_id + 'couponapp_close_widget') == 'yes' && jQuery( '#' + tab_id ).hasClass( "couponapp-open-always" ) ) {
+
+				jQuery('#' + tab_id + ' .tab-text').show();
+			}
+			var couponapp_open = sessionStorage.getItem(tab_id + 'couponapp_open');
+			if ( couponapp_open === 'yes' || jQuery('#' + tab_id ).hasClass( 'couponapp-open-state-open' ) ) {
+				jQuery('#' + tab_id).removeClass (function (index, className) {
+					if ( jQuery('#tab-box-front-' + index).data('animation-effect') == 'hide_attention_effect' ){
+						return (className.match (/(^|\s)couponapp-\S+-animation/g) || []).join(' ');
+					} else {
+						return;
+					}
+				});
+			}
+
+			var isCXMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? true : false;
+
+			if ( isCXMobile === true ) {
+				jQuery( '#' + tab_id ).removeClass( "couponapp-open-state-hover" );
+				var widget_id = jQuery('#' + tab_id + ' .tab-icon').data('widget-id');
+				var shop_id = jQuery('#' + tab_id + ' .tab-icon').data('shop-id');
+
+				var coupon_open = widget_id +'-'+shop_id;
+				var is_updatecouponopen = localStorage.getItem( 'is_updatecouponopen' + coupon_open);
+				if ( is_updatecouponopen == 'yes' ) {
+					jQuery( '#' + tab_id ).removeClass( "couponapp-open-state-open" );
+				}
+				jQuery( '#' + tab_id ).addClass( "couponapp-open-state-click" );
+			}
+
+			var IsUpdatevisitor = localStorage.getItem( 'is_updatevisitor');
+
+			/* Update Visitor */
+			if( updatecount == 1 && isowner == 'no' && is_updatevisitor == 0 &&  IsUpdatevisitor != 'yes' ){
+                updatecouponvisitor(jQuery,activeIndexID);
+				is_updatevisitor = 1;
+				localStorage.setItem( 'is_updatevisitor', 'yes');
+            }
+
+			/* Update Open Widget */
+			var widget_id = jQuery('#' + tab_id + ' .tab-icon').data('widget-id');
+			var shop_id = jQuery('#' + tab_id + ' .tab-icon').data('shop-id');
+
+			var coupon_open = widget_id +'-'+shop_id;
+			var is_updatecouponopen = localStorage.getItem( 'is_updatecouponopen' + coupon_open);
+			if ( jQuery( '#' + tab_id ).hasClass( "couonapp-active" ) && is_updatecouponopen != 'yes' ) {
+				updatecouponopen( jQuery,widget_id, shop_id);
+				localStorage.setItem( 'is_updatecouponopen' + coupon_open, 'yes');
+			}
+
+			if ( jQuery( '#' + tab_id ).hasClass( "couonapp-active" ) ){
+
+				setCountDownTimer(jQuery);
+			}
+
+			var session_tab = sessionStorage.getItem(tab_id + 'couponapp_close');
+			if ( session_tab === 'close' ) {
+				jQuery('#' + tab_id + ' .tab-text').hide();
+			}
+
+			/* Large Copy Button */
+			if ( jQuery('#' + tab_id + ' .tab-box-couponcode-content .couponx-large-btn').length > 0) {
+				jQuery('#' + tab_id + ' .tab-box-couponcode-content .couponx-large-btn .button.coupon-button').addClass( 'coupon-large-button' );
+				let coupon_button = jQuery('#' + tab_id + ' .tab-box-couponcode-content .couponx-large-btn .button.coupon-button');
+				jQuery('#' + tab_id + ' .tab-box-couponcode-content .couponx-large-btn').after(coupon_button);
+			}
+
+			/* Large Email Button */
+			if ( jQuery('#' + tab_id + ' .tab-box-email-content .couponx-large-email-btn').length > 0) {
+				jQuery('#' + tab_id + ' .tab-box-email-content .couponx-large-email-btn button.coupon-button.coupon-email-button').addClass( 'coupon-large-button' );
+				let coupon_button = jQuery('#' + tab_id + ' .tab-box-email-content .couponx-large-email-btn button.coupon-button.coupon-email-button');
+				jQuery('#' + tab_id + ' .tab-box-email-content .couponx-large-email-btn').after(coupon_button);
+				jQuery('#' + tab_id + ' .tab-box-email-content .couponx-large-email-btn .coupon-code-email-text.coupon-code-email-field').css('width', '100%');
+			}
+
+
+            if (couponapp_settings.couponapp_widgets[activeIndexID].font_family){
+				let font_family = couponapp_settings.couponapp_widgets[activeIndexID].font_family;
+				font_family = font_family.replace(/\s+/g, '-').toLowerCase();
+				if (jQuery('link#custom-google-fonts-'+ font_family +'-css').length == 0) {
+					jQuery('head').append('<link rel="stylesheet" id="custom-google-fonts-'+ font_family +'-css" href="https://fonts.googleapis.com/css?family='+encodeURI(couponapp_settings.couponapp_widgets[activeIndexID].font_family)+':200,300,400,500,600,700" type="text/css" media="all">');
+				}
+            }
+		}
+    }
+
+	var setCountDownTimer = function ( jQuery ) {
+		jQuery('.count-down-timer-box').each(function(){
+			var timezone 			= '';
+			var divId 				= jQuery(this);
+			var timer_coundown_form = jQuery(this).data("countdown");
+			var timer_template 		= jQuery(this).data("timer-template");
+			var widget_id 			= jQuery(this).data("widgetid");
+			var shop_plan 			= jQuery(this).data("plan-type");
+			var disable_coupon_code = jQuery(this).data("disable-coupon-code");
+			if( shop_plan == 'Free' ){
+				return;
+			}
+
+			divId.attr('id','coundown_box_'+widget_id);
+
+			if(timer_coundown_form != 'popup'){
+
+				timezone = jQuery(this).data("zone");
+				var year = jQuery(this).data("id").substring(0,4);
+				var month = jQuery(this).data("id").substring(5,7) - 1;
+				var day = jQuery(this).data("id").substring(8,10);
+				var hour = jQuery(this).data("id").substring(11,13);
+				var min = jQuery(this).data("id").substring(14,16);
+				var second = jQuery(this).data("id").substring(18,20);
+				var expiredDateTime  = new Date(year,month,day,hour,min,second);
+
+			} else{
+				var expiredDateTime = new Date();
+				var counter_hours = jQuery(this).data("houre");
+				var counter_minute = jQuery(this).data("min");
+				var counter_second = jQuery(this).data("second");
+				var expire_time = readCouponappCookie('couponx-countdowntime-'+ widget_id);
+
+				if( expire_time != null ) {
+					expiredDateTime = new Date(expire_time);
+				} else {
+					createCouponappCookie('couponx-countdowntime-'+ widget_id, expiredDateTime, 1);
+				}
+				var current_hourse = expiredDateTime.getHours();
+				var current_minute = expiredDateTime.getMinutes();
+				var current_second = expiredDateTime.getSeconds();
+
+				current_hourse = current_hourse + parseInt(counter_hours);
+				current_minute = current_minute + parseInt(counter_minute);
+				current_second =  current_second + parseInt(counter_second) + 2;
+
+				expiredDateTime.setHours(current_hourse);
+				expiredDateTime.setMinutes(current_minute);
+				expiredDateTime.setSeconds(current_second);
+			}
+
+			if( timer_template == 'timer_left_template' ){
+
+				var timerBoxId =  divId.attr('id');
+				var renderTimerBox = "#"+timerBoxId;
+
+				var id = "coundown_left_"+widget_id;
+
+				var bgColor = jQuery(this).data("coundown-bgcolor");
+				var txtColor = jQuery(this).data("coundown-txtcolor");
+				var data = [];
+				data["expired_date_time"] = expiredDateTime;
+				data["timezone"] = timezone;
+				data["bgcolor"] = jQuery(this).data("coundown-bgcolor");
+				data["txtcolor"] = jQuery(this).data("coundown-txtcolor");
+				data["labelcolor"] = jQuery(this).data("label-color");
+				data["timer_form"] = timer_coundown_form;
+				data["disable_coupon_code"] = disable_coupon_code;
+				data["renderTimerBox"] = renderTimerBox;
+
+				countdown(id,data,jQuery);
+
+				var htmlLefttimer = '<div class="progress-timer"><div class="timer-content"><div class="timer-title"><h5 style="color:'+txtColor+';font-family: inherit;">TIME LEFT</h5></div><div class="countdown-timer-block" id="countdown-timer-block_'+ widget_id + '" style="color:'+txtColor+'"></div></div><div class="countdown-bar" id="' + id +'"><div></div></div></div>';
+
+				jQuery(renderTimerBox).addClass("lefttimer_coundown");
+				jQuery(renderTimerBox).html(htmlLefttimer);
+				jQuery(divId).css("background-color",bgColor);
+				jQuery('.timer-title h5').css('color',data["labelcolor"]);
+
+			}else{
+				startTimer( jQuery,jQuery(this), expiredDateTime, timezone );
+			}
+			if(jQuery(".email-content-checkbox").length > 0 ){
+				jQuery(".email-content-checkbox p").css("color","#FFFFFF");
+			}
+		});
+	}
+
+	function getCurrentDateTimeGMT(timezone){
+		var localDate = new Date();
+		var localTime = localDate.getTime();
+		var localOffset = localDate.getTimezoneOffset() * 60000;
+		var utc = localTime + localOffset;
+		var offset = timezone;
+		var utc_offset = utc + (3600000 * offset);
+		localDate = new Date(utc_offset);
+		return localDate;
+	}
+
+	var startTimer = function( jQuery,thisElement, expiredDateTime, timezone ){
+
+		var divId 				= thisElement;
+		var widget_id 			= thisElement.data("widgetid");
+		var timer_coundown_form = thisElement.data("countdown");
+		var disable_coupon_code = thisElement.data("disable-coupon-code");
+		var timer_template 		= thisElement.data("timer-template");
+		var bgColor 			= thisElement.data("coundown-bgcolor");
+		var txtColor 			= thisElement.data("coundown-txtcolor");
+		var countdownLabelColor = thisElement.data("label-color");
+		var timerBoxId 			=  divId.attr('id');
+		var renderTimerBox 		= "#"+timerBoxId;
+		bgColor = ( bgColor != '' ) ? bgColor : '#3f3473';
+		txtColor = ( txtColor != '' ) ? txtColor : '#fff';
+		countdownLabelColor = ( countdownLabelColor != '' ) ? countdownLabelColor : '#fff';
+
+		var num = /^[-+]?[0-9]+\.[0-9]+$/;
+		var plus_number = /^[-+]?[0-9]+$/;
+		timezone = timezone.toString().replace("-", "");
+		var x = setInterval(function(){
+
+			var timerHtml = '';
+			if(timer_coundown_form != 'popup'){
+				var nowDate = new Date();
+
+
+				if( num.test(timezone) == true || plus_number.test(timezone) == true ) {
+					nowDate = getCurrentDateTimeGMT(timezone)
+				}else{
+					nowDate =  new Date(nowDate.toLocaleString('en-US', {timeZone: timezone}));
+				}
+
+				var hourss = Math.abs(expiredDateTime.getTime() - nowDate.getTime()) / 3600000;
+				var diffrenceDate = expiredDateTime - nowDate;
+
+				if(diffrenceDate < 0 || isNaN(diffrenceDate)){
+				    jQuery('.show_countdown_timer_box').css('background-color','unset');
+					hours = "0";
+					minute = "00";
+					seconds = "00";
+					//console.log(disable_coupon_code);
+					if ( disable_coupon_code == 1 ) {
+
+						if ( jQuery(renderTimerBox).parents().find('.tab-box.tab-front-box').hasClass( 'couponapp-style-3')  ) {
+							jQuery(renderTimerBox).parents().find('.tab-box.tab-front-box').removeClass( 'couponapp-style-3').addClass( 'couponapp-style-1')
+							var coupon_code_text = jQuery(renderTimerBox).parents().find('.tab-box.tab-front-box').find('.form-wrap.clear a').data( 'coupon');
+							var coupon_type = jQuery(renderTimerBox).parents().find('.tab-box.tab-front-box').find('.form-wrap.clear a').data( 'coupon-type');
+							jQuery(renderTimerBox).parents().find('.tab-box.tab-front-box').find('.form-wrap.clear').html('<div class="coupon-code-text"><span class="couponx-error">Oops! Coupon code expired</span></div><svg class="vector" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="fill:#635EFF;"><path d="M4.584 3.384C4.722 3.084 4.8 2.754 4.8 2.4C4.8 1.074 3.726 0 2.4 0C1.074 0 0 1.074 0 2.4C0 3.726 1.074 4.8 2.4 4.8C2.754 4.8 3.084 4.722 3.384 4.584L4.8 6L3.384 7.416C3.084 7.278 2.754 7.2 2.4 7.2C1.074 7.2 0 8.274 0 9.6C0 10.926 1.074 12 2.4 12C3.726 12 4.8 10.926 4.8 9.6C4.8 9.246 4.722 8.916 4.584 8.616L6 7.2L10.2 11.4H12V10.8L4.584 3.384ZM2.4 3.6C1.74 3.6 1.2 3.066 1.2 2.4C1.2 1.734 1.74 1.2 2.4 1.2C3.06 1.2 3.6 1.734 3.6 2.4C3.6 3.066 3.06 3.6 2.4 3.6ZM2.4 10.8C1.74 10.8 1.2 10.266 1.2 9.6C1.2 8.934 1.74 8.4 2.4 8.4C3.06 8.4 3.6 8.934 3.6 9.6C3.6 10.266 3.06 10.8 2.4 10.8ZM6 6.3C5.832 6.3 5.7 6.168 5.7 6C5.7 5.832 5.832 5.7 6 5.7C6.168 5.7 6.3 5.832 6.3 6C6.3 6.168 6.168 6.3 6 6.3ZM10.2 0.6L6 4.8L7.2 6L12 1.2V0.6H10.2Z" fill="#635EFF/"></path></svg>');
+						} else {
+							var coupon_code_text = jQuery(renderTimerBox).parents('.couponx-preview').find('input.copy-coupon-inputcode').val();
+							var coupon_type = jQuery(renderTimerBox).parents('.couponx-preview').find('input.copy-coupon-inputcode').data( 'coupon-type');
+						}
+						if ( coupon_code_text != '' && coupon_type == 'unique-coupon'  ) {
+							couponx_expired(coupon_code_text, jQuery)
+						}
+						jQuery(renderTimerBox).parents('.couponx-preview').find('.coupon-button.copy-to-clipboard').remove();
+						jQuery(renderTimerBox).parents('.couponx-preview').find('.coupon-code-text').html("<span class='couponx-error'>Oops! Coupon code expired</span>");
+						jQuery(renderTimerBox).addClass( 'couponx-code-expired');
+					}
+
+					if(timer_template == 'default_timer_theme'){
+						timerHtml = "<div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + hours + "</span><label>Hours</label></div> : <div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + minute + "</span><label>Minutes</label></div> : <div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + seconds + "</span><label>Seconds</label></div>";
+					}else{
+
+						timerHtml = "<div class='counter-timer'><div class='count-timer-box hrs1stdig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((hours/10)) + "</span></div><div class='count-timer-box hrs2nddig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((hours%10)) + "</span></div><label>Hours</label></div> : <div class='counter-timer'><div class='count-timer-box min1stdig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute/10)) + "</span></div><div class='count-timer-box min2nddig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute%10)) + "</span></div><label>Minutes</label></div> : <div class='counter-timer'><div class='count-timer-box sec1stdig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds/10)) + "</span></div><div class='count-timer-box sec2nddig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds%10)) + "</span></div><label>Seconds</label></div><input type='hidden' class='seconds_hidden' value='"+seconds+"'><input type='hidden' class='min_hide' value='"+minute+"'><input type='hidden' class='hrs_hide' value='"+hours+"'><input type='hidden' class='min_hide' value='"+minute+"'><input type='hidden' class='days_hide' value='"+days+"'>";
+					}
+					jQuery(renderTimerBox).html(timerHtml);
+					jQuery("div#coundown_box_"+widget_id).css("color",txtColor);
+					if(timer_template == 'timer_updown_2'){
+						jQuery("div#coundown_box_"+widget_id).css({"background-color":bgColor});
+						jQuery("div#coundown_box_"+widget_id+" .counter-timer label").css('color',countdownLabelColor);
+					}
+					return;
+				}
+
+				var days = Math.floor(diffrenceDate / (1000*60*60*24));
+				var hours = Math.floor((diffrenceDate % (1000*60*60*24))/ (1000*60*60));
+				var minute = Math.floor((diffrenceDate %(1000*60*60)) / (1000*60));
+				var seconds = Math.floor((diffrenceDate %(1000*60)) / 1000);
+
+				var beforeRendDays = jQuery('#'+ timerBoxId + ' .days_hide_'+widget_id).val();
+				var beforeRendHrs = jQuery('#' + timerBoxId + ' .hrs_hide_'+widget_id).val();
+				var beforeRendMins = jQuery('#' + timerBoxId + ' .min_hide_'+widget_id).val();
+				var beforeRendSecond = jQuery('#' + timerBoxId + ' .seconds_hidden_'+widget_id).val();
+
+				if ( Math.floor(hourss) == 24 ) {
+					hours= Math.floor(hourss);
+					days = 0;
+				}
+
+				if(days <= 0){
+					if(hours <= 0 ){
+						if(minute <= 0){
+							if(seconds <= 0 ){
+								//jQuery(divId).html('time is over!!');
+							} else {
+
+								if(timer_template == 'default_timer_theme'){
+									timerHtml = "<div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + minute + "</span><label>Minutes</label></div> : <div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + seconds + "</span><label>Seconds</label></div>";
+								} else {
+
+									timerHtml = "<div class='counter-timer'><div class='count-timer-box min1stdig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute/10)) + "</span></div><div class='count-timer-box min2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute%10)) + "</span></div><label>Minutes</label></div> : <div class='counter-timer'><div class='count-timer-box sec1stdig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds/10)) + "</span></div><div class='count-timer-box sec2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds%10)) + "</span></div><label>Seconds</label></div><input type='hidden' class='seconds_hidden_"+widget_id+"' value='"+seconds+"'><input type='hidden' class='min_hide_"+widget_id+"' value='"+minute+"'>";
+								}
+								jQuery(renderTimerBox).html( timerHtml );
+
+
+							}
+						}  else {
+
+							if(timer_template == 'default_timer_theme'){
+								timerHtml = "<div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + minute + "</span><label>Minutes</label></div> : <div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + seconds + "</span><label>Seconds</label></div>";
+							} else {
+
+								timerHtml = "<div class='counter-timer'><div class='count-timer-box min1stdig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute/10)) + "</span></div><div class='count-timer-box min2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute%10)) + "</span></div><label>Minutes</label></div> : <div class='counter-timer'><div class='count-timer-box sec1stdig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds/10)) + "</span></div><div class='count-timer-box sec2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds%10)) + "</span></div><label>Seconds</label></div><input type='hidden' class='seconds_hidden_"+widget_id+"' value='"+seconds+"'><input type='hidden' class='min_hide_"+widget_id+"' value='"+minute+"'>";
+							}
+							jQuery(renderTimerBox).html( timerHtml );
+						}
+					} else {
+
+						if(timer_template == 'default_timer_theme'){
+							timerHtml = "<div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + hours + "</span><label>Hours</label></div> : <div class='counter-timer' ><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + minute + "</span><label>Minutes</label></div> : <div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + seconds + "</span><label>Seconds</label></div>";
+						} else {
+							timerHtml = "<div class='counter-timer'><div class='count-timer-box hrs1stdig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((hours/10)) + "</span></div><div class='count-timer-box hrs2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((hours%10)) + "</span></div><label>Hours</label></div> : <div class='counter-timer'><div class='count-timer-box min1stdig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute/10)) + "</span></div><div class='count-timer-box min2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute%10)) + "</span></div><label>Minutes</label></div> : <div class='counter-timer'><div class='count-timer-box sec1stdig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds/10)) + "</span></div><div class='count-timer-box sec2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds%10)) + "</span></div><label>Seconds</label></div><input type='hidden' class='seconds_hidden_"+widget_id+"' value='"+seconds+"'><input type='hidden' class='min_hide_"+widget_id+"' value='"+minute+"'><input type='hidden' class='hrs_hide_"+widget_id+"' value='"+hours+"'>";
+						}
+
+						jQuery(renderTimerBox).html( timerHtml );
+					}
+				} else {
+
+					if(timer_template == 'default_timer_theme'){
+
+						timerHtml = "<div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" +days + "</span><label>Days</label></div> : <div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + hours + "</span><label>Hours</label></div> : <div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + minute + "</span><label>Minutes</label></div> : <div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + seconds + "</span><label>Seconds</label></div>";
+					}else{
+
+						timerHtml = "<div class='counter-timer'><div class='count-timer-box day1stdig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((days/10)) + "</span></div><div class='count-timer-box day2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((days%10)) + "</span></div><label>Days</label></div> : <div class='counter-timer'><div class='count-timer-box hrs1stdig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((hours/10)) + "</span></div><div class='count-timer-box hrs2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((hours%10)) + "</span></div><label>Hours</label></div> : <div class='counter-timer'><div class='count-timer-box min1stdig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute/10)) + "</span></div><div class='count-timer-box min2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute%10)) + "</span></div><label>Minutes</label></div> : <div class='counter-timer'><div class='count-timer-box sec1stdig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds/10)) + "</span></div><div class='count-timer-box sec2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds%10)) + "</span></div><label>Seconds</label></div><input type='hidden' class='seconds_hidden_"+widget_id+"' value='"+seconds+"'><input type='hidden' class='min_hide_"+widget_id+"' value='"+minute+"'><input type='hidden' class='hrs_hide_"+widget_id+"' value='"+hours+"'><input type='hidden' class='days_hide_"+widget_id+"' value='"+days+"'>";
+					}
+
+					jQuery(renderTimerBox).html( timerHtml );
+				}
+			} else {
+				var nowDate = new Date();
+
+				var diffrenceDate = expiredDateTime - nowDate;
+				var hourss = Math.abs(new Date(expiredDateTime).getTime() - nowDate.getTime()) / 3600000;
+				var days = Math.floor(diffrenceDate / (1000*60*60*24));
+				var hours = Math.floor((diffrenceDate % (1000*60*60*24)) / (1000*60*60));
+				var minute = Math.floor((diffrenceDate %(1000*60*60)) / (1000*60));
+				var seconds = Math.floor((diffrenceDate %(1000*60)) / 1000);
+
+				if ( Math.floor(hourss) == 24 ) {
+					hours= Math.floor(hourss);
+					days = 0;
+				}
+
+				//console.log(days + " == " + hours + " == "+  minute + " == " +seconds  );
+				if(diffrenceDate < 0 || isNaN(diffrenceDate)){
+					jQuery('.show_countdown_timer_box').css('background-color','unset');
+
+					minute = "00";
+					seconds = "00";
+					if ( disable_coupon_code == 1 ) {
+
+						if ( jQuery(renderTimerBox).parents().find('.tab-box.tab-front-box').hasClass( 'couponapp-style-3')  ) {
+
+							jQuery(renderTimerBox).parents().find('.tab-box.tab-front-box').removeClass( 'couponapp-style-3').addClass( 'couponapp-style-1')
+							var coupon_code_text = jQuery(renderTimerBox).parents().find('.tab-box.tab-front-box').find('.form-wrap.clear a').data( 'coupon');
+							var coupon_type = jQuery(renderTimerBox).parents().find('.tab-box.tab-front-box').find('.form-wrap.clear a').data( 'coupon-type');
+							jQuery(renderTimerBox).parents().find('.tab-box.tab-front-box').find('.form-wrap.clear').html('<div class="coupon-code-text"><span class="couponx-error">Oops! Coupon code expired</span></div><svg class="vector" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="fill:#635EFF;"><path d="M4.584 3.384C4.722 3.084 4.8 2.754 4.8 2.4C4.8 1.074 3.726 0 2.4 0C1.074 0 0 1.074 0 2.4C0 3.726 1.074 4.8 2.4 4.8C2.754 4.8 3.084 4.722 3.384 4.584L4.8 6L3.384 7.416C3.084 7.278 2.754 7.2 2.4 7.2C1.074 7.2 0 8.274 0 9.6C0 10.926 1.074 12 2.4 12C3.726 12 4.8 10.926 4.8 9.6C4.8 9.246 4.722 8.916 4.584 8.616L6 7.2L10.2 11.4H12V10.8L4.584 3.384ZM2.4 3.6C1.74 3.6 1.2 3.066 1.2 2.4C1.2 1.734 1.74 1.2 2.4 1.2C3.06 1.2 3.6 1.734 3.6 2.4C3.6 3.066 3.06 3.6 2.4 3.6ZM2.4 10.8C1.74 10.8 1.2 10.266 1.2 9.6C1.2 8.934 1.74 8.4 2.4 8.4C3.06 8.4 3.6 8.934 3.6 9.6C3.6 10.266 3.06 10.8 2.4 10.8ZM6 6.3C5.832 6.3 5.7 6.168 5.7 6C5.7 5.832 5.832 5.7 6 5.7C6.168 5.7 6.3 5.832 6.3 6C6.3 6.168 6.168 6.3 6 6.3ZM10.2 0.6L6 4.8L7.2 6L12 1.2V0.6H10.2Z" fill="#635EFF/"></path></svg>');
+						} else {
+							var coupon_code_text = jQuery(renderTimerBox).parents('.couponx-preview').find('input.copy-coupon-inputcode').val();
+							var coupon_type = jQuery(renderTimerBox).parents('.couponx-preview').find('input.copy-coupon-inputcode').data( 'coupon-type');
+						}
+						if ( coupon_code_text != '' && coupon_type == 'unique-coupon'  ) {
+							couponx_expired(coupon_code_text, jQuery)
+						}
+						jQuery(renderTimerBox).parents('.couponx-preview').find('.coupon-button.copy-to-clipboard').remove();
+						jQuery(renderTimerBox).parents('.couponx-preview').find('.coupon-code-text').html("<span class='couponx-error'>Oops! Coupon code expired</span>");
+						jQuery(renderTimerBox).addClass( 'couponx-code-expired');
+					}
+					if(timer_template == 'default_timer_theme'){
+						timerHtml = "<div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + minute + "</span><label>Minutes</label></div> : <div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + seconds + "</span><label>Seconds</label></div>";
+					}else{
+
+						timerHtml = "<div class='counter-timer'><div class='count-timer-box min1stdig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute/10)) + "</span></div><div class='count-timer-box min2nddig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute%10)) + "</span></div><label>Minutes</label></div> : <div class='counter-timer'><div class='count-timer-box sec1stdig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds/10)) + "</span></div><div class='count-timer-box sec2nddig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds%10)) + "</span></div><label>Seconds</label></div><input type='hidden' class='seconds_hidden' value='"+seconds+"'><input type='hidden' class='min_hide' value='"+minute+"'><input type='hidden' class='hrs_hide' value='"+hours+"'><input type='hidden' class='min_hide' value='"+minute+"'><input type='hidden' class='days_hide' value='"+days+"'>";
+					}
+
+					jQuery(renderTimerBox).html(timerHtml);
+					jQuery("div#coundown_box_"+widget_id).css("color",txtColor);
+					if(timer_template == 'timer_updown_2'){
+						jQuery("div#coundown_box_"+widget_id).css({"background-color":bgColor});
+						jQuery("div#coundown_box_"+widget_id+" .counter-timer label").css('color',countdownLabelColor);
+					}
+
+					return;
+				}
+
+				var beforeRendMins = jQuery('.min_hide_'+widget_id).val();
+				var beforeRendSecond = jQuery('.seconds_hidden_'+widget_id).val();
+				if(days <= 0){
+					if(hours <= 0 ){
+						if( timer_template == 'default_timer_theme' ){
+
+							timerHtml = "<div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + minute + "</span><label>Minutes</label></div> : <div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + seconds + "</span><label>Seconds</label></div>";
+
+						}else{
+
+							timerHtml = "<div class='counter-timer'><div class='count-timer-box min1stdig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute/10)) + "</span></div><div class='count-timer-box min2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute%10)) + "</span></div><label>Minutes</label></div> : <div class='counter-timer'><div class='count-timer-box sec1stdig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds/10)) + "</span></div><div class='count-timer-box sec2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds%10)) + "</span></div><label>Seconds</label></div><input type='hidden' class='seconds_hidden_"+widget_id+"' value='"+seconds+"'><input type='hidden' class='min_hide_"+widget_id+"' value='"+minute+"'><input type='hidden' class='hrs_hide_"+widget_id+"' value='"+hours+"'>";
+						}
+						jQuery(renderTimerBox).html(timerHtml);
+					}else{
+						if( timer_template == 'default_timer_theme' ){
+							timerHtml = "<div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + hours + "</span><label>Hours</label></div> : <div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + minute + "</span><label>Minutes</label></div> : <div class='counter-timer'><span style='background-color:"+bgColor+";color:"+txtColor+";'>" + seconds + "</span><label>Seconds</label></div>";
+						}else{
+							timerHtml = "<div class='counter-timer'><div class='count-timer-box hrs1stdig_"+widget_id+"' style='background-color:" + bgColor + ";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((hours/10)) + "</span></div><div class='count-timer-box hrs2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((hours%10)) + "</span></div><label>Hours</label></div> : <div class='counter-timer'><div class='count-timer-box min1stdig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute/10)) + "</span></div><div class='count-timer-box min2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute%10)) + "</span></div><label>Minutes</label></div> : <div class='counter-timer'><div class='count-timer-box sec1stdig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds/10)) + "</span></div><div class='count-timer-box sec2nddig_"+widget_id+"' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds%10)) + "</span></div><label>Seconds</label></div><input type='hidden' class='seconds_hidden_"+widget_id+"' value='"+seconds+"'><input type='hidden' class='min_hide_"+widget_id+"' value='"+minute+"'><input type='hidden' class='hrs_hide_"+widget_id+"' value='"+hours+"'>";
+						}
+
+						jQuery(renderTimerBox).html(timerHtml);
+					}
+				} else {
+					if(hours == 0){
+
+						if(timer_template == 'default_timer_theme'){
+							timerHtml = "<div class='counter-timer'><span>" + days + "</span><label>Days</label></div> : <div class='counter-timer'><span>"+ minute + "</span><label>Minutes</label></div> : <div class='counter-timer'><span>" + seconds + "</span><label>Seconds</label></div>";
+
+						}else{
+
+							timerHtml = "<div class='counter-timer'><div class='count-timer-box day1stdig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((days/10)) + "</span></div><div class='count-timer-box day2nddig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((days%10)) + "</span></div><label>Days</label></div> : <div class='counter-timer'><div class='count-timer-box min1stdig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute/10)) + "</span></div><div class='count-timer-box min2nddig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute%10)) + "</span></div><label>Minutes</label></div> : <div class='counter-timer'><div class='count-timer-box sec1stdig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds/10)) + "</span></div><div class='count-timer-box sec2nddig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds%10)) + "</span></div><label>Seconds</label></div><input type='hidden' class='seconds_hidden' value='"+seconds+"'><input type='hidden' class='min_hide' value='"+minute+"'><input type='hidden' class='min_hide' value='"+minute+"'><input type='hidden' class='hrs_hide' value='"+hours+"'><input type='hidden' class='days_hide' value='"+days+"'>";
+						}
+						jQuery(renderTimerBox).html(timerHtml);
+					}else{
+						if(timer_template == 'default_timer_theme'){
+							timerHtml = "<div class='counter-timer'><span>" + days + "</span><label>Days</label></div> : <div class='counter-timer'><span>" + hours + "</span><label>Hours</label></div> : <div class='counter-timer'><span>" + minute + "</span><label>Minutes</label></div> : <div class='counter-timer'><span>" + seconds + "</span><label>Seconds</label></div>";
+
+						}else{
+
+							timerHtml = "<div class='counter-timer'><div class='count-timer-box day1stdig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((days/10)) + "</span></div><div class='count-timer-box day2nddig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((days%10)) + "</span></div><label>Days</label></div> : <div class='counter-timer'><div class='count-timer-box hrs1stdig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((hours/10)) + "</span></div><div class='count-timer-box hrs2nddig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((hours%10)) + "</span></div><label>Hours</label></div> : <div class='counter-timer'><div class='count-timer-box min1stdig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute/10)) + "</span></div><div class='count-timer-box min2nddig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((minute%10)) + "</span></div><label>Minutes</label></div> : <div class='counter-timer'><div class='count-timer-box sec1stdig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds/10)) + "</span></div><div class='count-timer-box sec2nddig' style='background-color:"+bgColor+";color:"+txtColor+";'><span style='color:"+txtColor+"'>" + parseInt((seconds%10)) + "</span></div><label>Seconds</label></div><input type='hidden' class='seconds_hidden' value='"+seconds+"'><input type='hidden' class='min_hide' value='"+minute+"'><input type='hidden' class='hrs_hide' value='"+hours+"'><input type='hidden' class='min_hide' value='"+minute+"'><input type='hidden' class='days_hide' value='"+days+"'>";
+						}
+						jQuery(renderTimerBox).html(timerHtml);
+					}
+				}
+
+
+
+			}
+			jQuery(".counter-timer label").css('color',countdownLabelColor);
+
+			/* Animation Code */
+			var animation_class = '';
+
+			if( timer_template == 'timer_updown_1' ){
+				animation_class = 'move-up-down';
+			}else if( timer_template == 'timer_updown_2' ){
+				animation_class = 'move-up-down';
+				jQuery('#' + timerBoxId + ' .count-timer-box').parent().parent().css('background-color',bgColor);
+				jQuery('.count-timer-box').addClass('timerupdown2_front');
+
+			}else if( timer_template == 'timer_blinking' ){
+				animation_class = 'first-animation';
+			}
+
+			jQuery('#' + timerBoxId + ' .count-timer-box').css('color',txtColor);
+
+			jQuery("#" + timerBoxId + " .day1stdig_"+widget_id+" span").removeClass(animation_class);
+			jQuery("#" + timerBoxId + " .day2nddig_"+widget_id+" span").removeClass(animation_class);
+
+			jQuery("#" + timerBoxId + " .hrs1stdig_"+widget_id+" span").removeClass(animation_class);
+			jQuery("#" + timerBoxId + " .hrs2nddig span").removeClass(animation_class);
+
+			jQuery("#" + timerBoxId + " .min1stdig_"+widget_id+" span").removeClass(animation_class);
+			jQuery("#" + timerBoxId + " .min2nddig_"+widget_id+" span").removeClass(animation_class);
+
+			jQuery("#" + timerBoxId + " .sec1stdig_"+widget_id+" span").removeClass(animation_class);
+			jQuery("#" + timerBoxId + " .sec2nddig_"+widget_id+" span").removeClass(animation_class);
+
+			jQuery("#"+timerBoxId).css('color',txtColor);
+
+
+			if( typeof beforeRendDays !== "undefined" &&  beforeRendDays != days ){
+				if( parseInt(beforeRendDays % 10)  != parseInt(days % 10) ){
+					jQuery("#" + timerBoxId + " .day2nddig_"+widget_id+" span").addClass(animation_class);
+				}
+				if( parseInt(beforeRendDays / 10)  != parseInt(days / 10)  ){
+					jQuery("#" + timerBoxId + " .day1stdig_"+widget_id+" span").addClass(animation_class);
+				}
+			}
+
+			if( typeof beforeRendHrs !== "undefined" && beforeRendHrs != hours ){
+				if( parseInt(beforeRendHrs % 10)  != parseInt(hours % 10) ){
+					jQuery("#" + timerBoxId + " .hrs2nddig_"+widget_id+" span").addClass(animation_class);
+				}
+				if( parseInt(beforeRendHrs / 10)  != parseInt(hours / 10)  ){
+					jQuery("#" + timerBoxId + " .hrs1stdig_"+widget_id+" span").addClass(animation_class);
+				}
+			}
+
+			if( typeof beforeRendMins !== "undefined" && beforeRendMins != minute ){
+				if( parseInt(beforeRendMins % 10)  != parseInt(minute % 10)  ){
+					jQuery("#" + timerBoxId + " .min2nddig_"+widget_id+" span").addClass(animation_class);
+				}
+				if( parseInt(beforeRendMins / 10)  != parseInt(minute / 10)  ){
+					jQuery("#" + timerBoxId + " .min1stdig_"+widget_id+" span").addClass(animation_class);
+				}
+			}
+
+			if( typeof beforeRendSecond !== "undefined" && beforeRendSecond != seconds ){
+				if( beforeRendSecond % 10  != seconds % 10  ){
+					jQuery("#" + timerBoxId + " .sec2nddig_"+widget_id+" span").addClass(animation_class);
+				}
+				if( parseInt(beforeRendSecond / 10)  != parseInt(seconds / 10)  ){
+					jQuery("#" + timerBoxId + " .sec1stdig_"+widget_id+" span").addClass(animation_class);
+				}
+			}
+
+		 },1000);
+	}
+
+	/* Update Coupon App Visitor */
+	var updatecouponvisitor = function ( jQuery,IndexID) {
+
+		var widget_id = couponapp_settings.couponapp_widgets[IndexID].widget_id;
+		var shop_id = couponapp_settings.couponapp_widgets[IndexID].shop_id;
+
+        url = couponapp_domain + 'couponapp_front/updateVistor';
+        jQuery.ajax({
+            type: "POST",
+            url: url,
+            data: {'shop_url': shopurl,'widget_id':widget_id,"shop_id":shop_id},
+            //dataType: "JSON",
+            success: function (response) {}
+        });
+    }
+	/* Update Coupon Tab Open */
+	var updatecouponopen = function (jQuery, widget_id, shop_id) {
+
+		url = couponapp_domain + 'front/updatecouponopen';
+        jQuery.ajax({
+            type: "POST",
+            url: url,
+            data: {'shop_url': shopurl,'widget_id':widget_id,"shop_id":shop_id},
+            //dataType: "JSON",
+            success: function (response) {
+
+            }
+        });
+	}
+
+	/* Update Coupon Code Get*/
+	var updatecouponcodeget = function (jQuery, widget_id, shop_id) {
+		url = couponapp_domain + 'front/updatecouponcodeget';
+        jQuery.ajax({
+            type: "POST",
+            url: url,
+            data: {'shop_url': shopurl,'widget_id':widget_id,"shop_id":shop_id},
+            //dataType: "JSON",
+            success: function (response) {
+
+            }
+        });
+		return true;
+	}
+
+
+	var page_scroll_functions = function (jQuery,activeIndexID) {
+		jQuery(window).scroll(function () {
+			if ( couponapp_settings.couponapp_widgets[activeIndexID].page_scroll === 'yes') {
+				var scrollHeight = jQuery(document).height() - jQuery(window).height();
+				var scrollPos = jQuery(window).scrollTop();
+				if (scrollPos != 0) {
+					var scrollPer = ((scrollPos / scrollHeight) * 100);
+					var widgetScroll = parseInt(couponapp_settings.couponapp_widgets[activeIndexID].page_scroll_sec);
+					var couponapp_show = sessionStorage.getItem(activeIndexID + 'couponapp_show');
+
+					if (scrollPer >= widgetScroll  && is_page_scroll_index !=  activeIndexID && couponapp_show != 'yes' ) {
+
+						is_page_scroll_index = activeIndexID;
+						//check_for_widget_data(jQuery,activeIndexID);
+						var tab_id = 'tab-box-front-' + activeIndexID;
+
+						if(!isCXMobile && jQuery("#"+tab_id).hasClass("couponapp-desktop")){
+							jQuery( '#' + tab_id ).show();
+						}else if(isCXMobile && jQuery("#"+tab_id).hasClass("couponapp-mobile")){
+							jQuery( '#' + tab_id ).show();
+						}else{
+							jQuery( '#' + tab_id ).hide();
+						}
+						sessionStorage.setItem( activeIndexID + 'couponapp_scroll', 'yes');
+						sessionStorage.setItem( activeIndexID + 'couponapp_show', 'yes');
+					}
+				}
+			}
+		});
+	}
+
+	var check_for_time = function (activeIndexID) {
+        var displayStatus = 0;
+
+        if (parseInt(couponapp_settings.couponapp_widgets[activeIndexID].display_conditions) == 1) {
+            var displayRules = couponapp_settings.couponapp_widgets[activeIndexID].display_rules;
+
+            if (displayRules.length > 0) {
+                var localDate = new Date();
+				var days_gmt = couponapp_settings.couponapp_widgets[activeIndexID].gmt.replace("+", "");
+				days_gmt = days_gmt.replace("-", "");
+
+				var num = /^[-+]?[0-9]+\.[0-9]+$/;
+				var plus_number = /^[-+]?[0-9]+$/;
+				if( num.test(days_gmt) == true || plus_number.test(days_gmt) == true ) {
+					var localTime = localDate.getTime();
+					var localOffset = localDate.getTimezoneOffset() * 60000;
+					var utc = localTime + localOffset;
+					var offset = couponapp_settings.couponapp_widgets[activeIndexID].gmt;
+					var utc_offset = utc + (3600000 * offset);
+					localDate = new Date(utc_offset);
+				} else {
+
+					if( couponapp_settings.couponapp_widgets[activeIndexID].gmt != '' ){
+						var localDate = new Date().toLocaleString('en-US', { timeZone: couponapp_settings.couponapp_widgets[activeIndexID].gmt });
+						localDate = new Date(localDate);
+					}
+				}
+
+				var utcHours = localDate.getHours();
+				var utcMin = localDate.getMinutes();
+				var utcDay = localDate.getDay();
+
+                for (var rule = 0; rule < displayRules.length; rule++) {
+                    var hourStatus = 0;
+                    var checkForTime = 0;
+                    var nextday = 0;
+
+					if ( displayRules[rule].start_hours == 0 && displayRules[rule].end_hours == 0 && (displayRules[rule].start_time == '' || displayRules[rule].start_time == null ) && ( displayRules[rule].end_time == '' || displayRules[rule].end_time == null) ) {
+						displayStatus = 1;
+					}
+
+                    if (displayRules[rule].days == -1) {
+                        checkForTime = 1;
+                    } else if (displayRules[rule].days >= 0 && displayRules[rule].days <= 6) {
+                        if (displayRules[rule].days == utcDay) {
+                            checkForTime = 1;
+                        }
+                    } else if (displayRules[rule].days == 7) {
+                        if (utcDay >= 0 && utcDay <= 4) {
+                            checkForTime = 1;
+                        }
+                    } else if (displayRules[rule].days == 8) {
+                        if (utcDay >= 1 && utcDay <= 5) {
+                            checkForTime = 1;
+                        }
+                    } else if (displayRules[rule].days == 9) {
+                        if (utcDay == 5 || utcDay == 6) {
+                            checkForTime = 1;
+                        }
+                    }
+
+
+                    if ( displayRules[rule].start_hours > displayRules[rule].end_hours) {
+                        if(checkForTime == 0){
+                            displayRules[rule].days = displayRules[rule].days+1;
+                        }
+                        if (displayRules[rule].days == 0) {
+                            checkForTime = 1;
+                        }else if (displayRules[rule].days >= 1 && displayRules[rule].days <= 7) {
+                            checkForTime = 1;
+                        }else if (displayRules[rule].days == 8) {
+                            if (utcDay >= 1 && utcDay <= 5) {
+                                checkForTime = 1;
+                            }
+                        }else if (displayRules[rule].days == 9) {
+                            if (utcDay >= 2 && utcDay <= 6) {
+                                checkForTime = 1;
+                            }
+                        } else if (displayRules[rule].days == 10) {
+                            if (utcDay == 6 || utcDay == 0) {
+                                checkForTime = 1;
+                            }
+                        }
+                        if(0 <= displayRules[rule].end_hours && utcHours>= displayRules[rule].end_hours){
+                            nextday = 1;
+                        }
+                    }
+                    if (checkForTime == 1) {
+
+                        if (utcHours > displayRules[rule].start_hours && utcHours < displayRules[rule].end_hours) {
+                            hourStatus = 1;
+                        } else if (utcHours == displayRules[rule].start_hours && utcHours < displayRules[rule].end_hours) {
+                            if (utcMin >= displayRules[rule].start_min) {
+                                hourStatus = 1;
+                            }
+                        } else if (utcHours > displayRules[rule].start_hours && utcHours == displayRules[rule].end_hours) {
+                            if (utcMin <= displayRules[rule].end_min) {
+                                hourStatus = 1;
+                            }
+                        } else if (utcHours == displayRules[rule].start_hours && utcHours == displayRules[rule].end_hours) {
+                            if (utcMin >= displayRules[rule].start_min && utcMin <= displayRules[rule].end_min) {
+                                hourStatus = 1;
+                            }
+                        } else if (displayRules[rule].start_hours > displayRules[rule].end_hours) {
+                            if(utcHours >= displayRules[rule].start_hours){
+                                if (utcMin >= displayRules[rule].start_min && utcMin <= displayRules[rule].end_min) {
+                                    hourStatus = 1;
+                                }
+                            }
+
+                            if(nextday == 1 && utcHours <= displayRules[rule].end_hours){
+                                if (utcMin >= displayRules[rule].start_min && utcMin <= displayRules[rule].end_min) {
+                                    hourStatus = 1;
+                                }
+                            }
+                        }
+
+                        if (hourStatus == 1) {
+                            if (utcMin >= displayRules[rule].start_min && utcMin <= displayRules[rule].end_min) {
+                                minStatus = 1;
+                            }
+                        }
+                    }
+                    if (hourStatus == 1 && checkForTime == 1) {
+                        displayStatus = 1;
+                    }
+                    if (displayStatus == 1) {
+                        rule = displayRules.length + 1;
+                    }
+                }
+            } else {
+                displayStatus = 1;
+            }
+        } else {
+            displayStatus = 1;
+        }
+		return displayStatus;
+    }
+
+	var createCouponappCookie = function(name, value, days){
+
+		if (days) {
+			var expiry = new Date();
+			expiry.setTime(expiry.getTime()+(days*24*60*60*1000));
+			var expires = "; expires=" + expiry.toGMTString();
+		} else {
+			var expires = "";
+		}
+		document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/; SameSite=Lax";
+	}
+
+	var readCouponappCookie = function(name){
+
+		var nameEQ = escape(name) + "=";
+		var ca = document.cookie.split(';');
+		for (var i = 0; i < ca.length; i++) {
+			var c = ca[i];
+			while (c.charAt(0) == ' ')
+			c = c.substring(1, c.length);
+			if (c.indexOf(nameEQ) == 0)
+			return unescape(c.substring(nameEQ.length, c.length));
+		}
+		return null;
+	}
+
+	function coupon_ownerevent(jQuery, event) {
+        jQuery.ajax({
+            type: "POST",
+            url: couponapp_domain + 'front/addmaxvisitors',
+            data: {'storeid': couponapp_storeid, 'event': event},
+            success: function (response) {}
+        });
+    }
+
+	var crearteCouponUniqueCode = function( jQuery , widget_id, shop_id, coupon_widget_id ){
+
+		unique_code = readCouponappCookie('couponx_unique-'+widget_id);
+		var couponapp_email = jQuery( '#' + coupon_widget_id + ' .coupon-code-email-text input[name="couponapp-email"]' ).length;
+
+		if ( (unique_code == '' || unique_code == null ) && couponapp_email != '1' && !jQuery('#' + coupon_widget_id ).hasClass( 'couponapp-coupon-claim' ) ) {
+
+			var couponappurl = couponapp_domain + 'front/checkcouponcode?fullpathName='+encodeURI(fullpathName);
+			jQuery( '#' + coupon_widget_id + ' .tab-box-couponcode-content .coupon-code-text').hide();
+			jQuery.ajax({
+				type: "POST",
+				url: couponappurl,
+				data: {
+						'widget_id' : widget_id,
+						'shop_id' : shop_id,
+						'shop_url': shopurl
+					},
+				dataType: "JSON",
+				success: function (response) {
+					if ( response.show_coupon === true ) {
+						var discount_code = response.discount_code;
+						var coupon_code_text = jQuery( '#' + coupon_widget_id + ' .tab-box-couponcode-content').html().replace("uniquecode", discount_code);
+						jQuery( '#' + coupon_widget_id + ' .tab-box-couponcode-content').html( coupon_code_text.replace("uniquecode", discount_code));
+						jQuery("#"+coupon_widget_id+" .tab-box-content.tab-box-email-content .coupon-button.coupon-email-button").attr("data-coupon-code",discount_code);
+						createCouponappCookie('couponx_unique-'+widget_id, discount_code, 365);
+						jQuery( '#' + coupon_widget_id + ' .tab-box-couponcode-content .coupon-code-text').show();
+					}
+				}
+			});
+		}
+
+	}
+
+	CouponAppReadyJavaScript = function(jQuery){
+		jQuery(document).ready(function(){
+
+			/*Remove Animation on Click */
+			jQuery(document).on("click touch", ".couponapp-open-state-click .tab-icon" , function(){
+				var id = jQuery(this).parent().parent().attr( 'id' );
+				if ( jQuery( '#' + id ).hasClass( "couonapp-active" ) ) {
+					jQuery( '#' + id ).removeClass( 'couonapp-active');
+					sessionStorage.setItem( id + 'couponapp_pending_message', 'yes');
+					localStorage.setItem( id + 'couponapp_close_widget', 'yes');
+
+					if ( jQuery( '#' + id ).hasClass( "couponapp-open-always" ) ) {
+						jQuery('#' + id + ' .tab-text').show();
+					}
+					return;
+				}
+
+				var widget_id = jQuery(this).data('widget-id');
+				var shop_id = jQuery(this).data('shop-id');
+
+				crearteCouponUniqueCode(jQuery, widget_id, shop_id, id);
+				var coupon_open = widget_id +'-'+shop_id;
+				var is_updatecouponopen = localStorage.getItem( 'is_updatecouponopen' + coupon_open);
+				if ( !jQuery( '#' + id ).hasClass( "couonapp-active" ) && is_updatecouponopen != 'yes' ) {
+					updatecouponopen( jQuery, widget_id, shop_id);
+					localStorage.setItem( 'is_updatecouponopen' + coupon_open, 'yes');
+				}
+
+				jQuery( '#' + id ).addClass( 'couonapp-active');
+				setCountDownTimer(jQuery);
+
+				jQuery( '#' + id ).removeClass (function (index, className) {
+					if ( jQuery('#tab-box-front-' + index).data('animation-effect') == 'hide_attention_effect' ){
+						return (className.match (/(^|\s)couponapp-\S+-animation/g) || []).join(' ');
+					} else {
+						return;
+					}
+				});
+
+				/* Save Close in Session Storage */
+				var session_tab = sessionStorage.getItem(id + 'couponapp_close');
+				if ( session_tab === 'close' ) {
+					jQuery('#' + id + ' .tab-text').hide();
+				}
+				if ( jQuery( '#' + id ).hasClass( "couponapp-open-first" ) ) {
+					sessionStorage.setItem( id + 'couponapp_close', 'close');
+					jQuery('#' + id + ' .tab-text').hide();
+				}
+				sessionStorage.setItem( id + 'couponapp_open', 'yes');
+
+				if ( jQuery( '#' + id ).hasClass( "coupon-pending-message" )) {
+					sessionStorage.setItem( id + 'couponapp_pending_message', 'yes');
+					jQuery('#' + id + ' .coupon-pending-message').remove();
+				}
+
+				jQuery( '.tab-box.tab-front-box').each(function () {
+					var main_width = jQuery(this).find( '.tab-box-email-content .form-wrap').outerWidth();
+					var button_width = jQuery(this).find( '.coupon-button.coupon-email-button').outerWidth();
+					if ( typeof main_width !== 'undefined' && typeof button_width !== 'undefined') {
+						//jQuery(this).find('.coupon-code-email-text').width( main_width - button_width - 37 );
+						jQuery(this).find('.coupon-code-email-text').width( '100%' );
+						jQuery(this).find('.couponx-large-email-btn .coupon-code-email-text.coupon-code-email-field').width('100%' );
+					}
+				});
+			});
+
+			/* Remove Animation on Hover */
+			jQuery(document).on("click touch", ".couponapp-open-state-hover-open .tab-icon" , function(){
+				var id = jQuery(this).parent().parent().attr( 'id' );
+
+				if ( jQuery( '#' + id ).hasClass( "couonapp-active" ) ) {
+					jQuery( '#' + id ).removeClass( 'couonapp-active');
+					sessionStorage.setItem( id + 'couponapp_pending_message', 'yes');
+					jQuery('#' + id).removeClass( 'couponapp-open-state-hover-open');
+					jQuery('#' + id).addClass( 'couponapp-open-state-click');
+					setTimeout(function(){
+						jQuery('#' + id).addClass( 'couponapp-open-state-hover');
+					}, 100 );
+
+					return;
+				}
+			});
+			//mouseover
+			jQuery(document).on("mouseenter touch", ".couponapp-open-state-hover .tab-icon" , function(){
+				var id = jQuery(this).parent().parent().attr( 'id' );
+				var widget_id = jQuery(this).data('widget-id');
+				var shop_id = jQuery(this).data('shop-id');
+
+				if(jQuery(this).data("iscoupon-unique") != "0"){
+					crearteCouponUniqueCode(jQuery, widget_id, shop_id, id);
+				}
+
+				if ( jQuery( '#' + id ).hasClass( "couonapp-active" ) ) {
+					return;
+				}
+				var coupon_open = widget_id +'-'+shop_id;
+				var is_updatecouponopen = localStorage.getItem( 'is_updatecouponopen' + coupon_open);
+				if ( !jQuery( '#' + id ).hasClass( "couonapp-active" ) && is_updatecouponopen != 'yes' ) {
+					updatecouponopen( jQuery, widget_id, shop_id);
+					localStorage.setItem( 'is_updatecouponopen' + coupon_open, 'yes');
+				}
+
+				jQuery('#' + id).removeClass (function (index, className) {
+					if ( jQuery('#tab-box-front-' + index).data('animation-effect') == 'hide_attention_effect' ){
+						return (className.match (/(^|\s)couponapp-\S+-animation/g) || []).join(' ');
+					} else {
+						return;
+					}
+				});
+				jQuery('#' + id ).addClass( 'couonapp-active');
+				setCountDownTimer(jQuery);
+				jQuery('#' + id).addClass( 'couponapp-open-state-click');
+
+
+				/* Save Close in Session Storage */
+				var session_tab = sessionStorage.getItem(id + 'couponapp_close');
+				if ( session_tab === 'close' ) {
+					jQuery('#' + id + ' .tab-text').hide();
+				}
+				if ( jQuery( '#' + id ).hasClass( "couponapp-open-first" ) ) {
+					sessionStorage.setItem( id + 'couponapp_close', 'close');
+					jQuery('#' + id + ' .tab-text').hide();
+				}
+
+				sessionStorage.setItem( id + 'couponapp_open', 'yes');
+
+				if ( jQuery( '#' + id ).hasClass( "coupon-pending-message" )) {
+					sessionStorage.setItem( id + 'couponapp_pending_message', 'yes');
+					jQuery('#' + id + ' .coupon-pending-message').remove();
+				}
+
+				jQuery( '.tab-box.tab-front-box').each(function () {
+					var main_width = jQuery(this).find( '.tab-box-email-content .form-wrap').outerWidth();
+					var button_width = jQuery(this).find( '.coupon-button.coupon-email-button').outerWidth();
+					if ( typeof main_width !== 'undefined' && typeof button_width !== 'undefined') {
+						//jQuery(this).find('.coupon-code-email-text').width( main_width - button_width - 37 );
+						jQuery(this).find('.coupon-code-email-text').width( '100%' );
+						jQuery(this).find('.couponx-large-email-btn .coupon-code-email-text.coupon-code-email-field').width('100%' );
+					}
+				});
+			});
+
+			/*  Coupon tab close event */
+			jQuery(document).on( "click touch", ".coupon-tab-close" , function(e){
+				e.preventDefault();
+				var id = jQuery(this).parent().parent().attr( 'id' );
+				if ( typeof id == 'undefined' ) {
+					var id = jQuery(this).parent().parent().parent().attr( 'id' );
+					if ( typeof id == 'undefined' ) {
+						var id = jQuery(this).parent().parent().parent().parent().attr( 'id' );
+					}
+				}
+
+				if ( isCXMobile === true ) {
+					jQuery( '#' + id ).removeClass( "couponapp-open-state-open" );
+				}
+
+				jQuery( '#' + id).removeClass( 'couonapp-active');
+				jQuery(this).parent().attr("style",'');
+
+				{
+					localStorage.setItem( id + 'couponapp_close_widget', 'yes');
+				}
+
+				if ( jQuery( '#' + id ).hasClass( "couponapp-open-state-hover-open" ) ) {
+					jQuery('#' + id).addClass( 'couponapp-open-state-hover');
+					jQuery('#' + id).removeClass( 'couponapp-open-state-hover-open');
+				}
+
+				jQuery('#' + id).removeClass (function (index, className) {
+					if ( jQuery('#tab-box-front-' + index).data('animation-effect') == 'hide_attention_effect' ){
+						return (className.match (/(^|\s)couponapp-\S+-animation/g) || []).join(' ');
+					} else {
+						return;
+					}
+				});
+
+				sessionStorage.setItem( id + 'couponapp_open', 'yes');
+
+				if ( jQuery( '#' + id ).hasClass( "coupon-pending-message" )) {
+					sessionStorage.setItem( id + 'couponapp_pending_message', 'yes');
+					jQuery('#' + id + ' .coupon-pending-message').remove();
+				}
+
+				if ( jQuery( '#' + id ).hasClass( "couponapp-open-always" ) ) {
+					jQuery('#' + id + ' .tab-text').show();
+				}
+
+
+			});
+
+			/*  Coupon popup overlay close event */
+			jQuery(document).on( "click touch", ".couponx-popup-overlay" , function(e){
+				var id = jQuery(this).parent().parent().attr( 'id' );
+				if ( typeof id == 'undefined' ) {
+					var id = jQuery(this).parent().parent().parent().parent().attr( 'id' );
+					if ( typeof id == 'undefined' ) {
+						var id = jQuery(this).parent().parent().parent().attr( 'id' );
+					}
+				}
+				jQuery( '#' + id).removeClass( 'couonapp-active');
+				jQuery(this).parent().attr("style",'');
+				{
+					localStorage.setItem( id + 'couponapp_close_widget', 'yes');
+				}
+
+				if ( jQuery( '#' + id ).hasClass( "couponapp-open-state-hover-open" ) ) {
+					jQuery('#' + id).addClass( 'couponapp-open-state-hover');
+					jQuery('#' + id).removeClass( 'couponapp-open-state-hover-open');
+				}
+
+				jQuery('#' + id).removeClass (function (index, className) {
+					if ( jQuery('#tab-box-front-' + index).data('animation-effect') == 'hide_attention_effect' ){
+						return (className.match (/(^|\s)couponapp-\S+-animation/g) || []).join(' ');
+					} else {
+						return;
+					}
+				});
+
+				sessionStorage.setItem( id + 'couponapp_open', 'yes');
+
+				if ( jQuery( '#' + id ).hasClass( "coupon-pending-message" )) {
+					sessionStorage.setItem( id + 'couponapp_pending_message', 'yes');
+					jQuery('#' + id + ' .coupon-pending-message').remove();
+				}
+			});
+
+			/* Copy Coupon Code on click event */
+			jQuery(document).on( "click touch", ".copy-to-clipboard" , function(e){
+				e.preventDefault();
+				var widget_id = jQuery(this).data('widget-id');
+				var shop_id = jQuery(this).data('shop-id');
+				var widget_count = jQuery(this).data('widget-count');
+
+				/* */
+				var copyText = document.getElementById("copy-coupon-inputcode-" + widget_count);
+
+				/* Select the text field */
+				copyText.select();
+				copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+
+				/* Copy the text inside the text field */
+				document.execCommand("copy");
+
+				jQuery( '#tab-box-front-' +widget_count +' .coupon-code-text .label-tooltip' ).addClass('tooltip-show');
+				setTimeout(function() {
+					jQuery('#tab-box-front-' +widget_count +' .coupon-code-text .label-tooltip').removeClass('tooltip-show');
+				}, 1000);
+
+				/* */
+				var couponget = widget_id +'-'+shop_id;
+				var is_updatecouponcodeget = localStorage.getItem( 'is_updatecouponcodeget' + couponget);
+				if ( !jQuery( this ).hasClass( "couoncode-copied" ) && is_updatecouponcodeget != 'yes' ) {
+					updatecouponcodeget( jQuery, widget_id, shop_id);
+					localStorage.setItem( 'is_updatecouponcodeget' + couponget, 'yes');
+				}
+
+				jQuery( this ).addClass( "couoncode-copied" );
+
+				if ( typeof jQuery( '#tab-box-front-' +widget_count ).data('close-widget') != 'undefined') {
+					var close_widget_seconds = jQuery( '#tab-box-front-' +widget_count ).data('close-widget') * 1000;
+
+					var close_widget_after_seconds = function(widget_count, jQuery){
+						jQuery('#tab-box-front-' +widget_count ).removeClass('couonapp-active');
+						localStorage.setItem( 'tab-box-front-' + widget_count + 'couponapp_close_widget', 'yes');
+					};
+					setTimeout(close_widget_after_seconds, close_widget_seconds, widget_count, jQuery);
+				}
+
+				if ( jQuery( '#tab-box-front-' + widget_count ).hasClass('couponapp-open-state-open') ) {
+					localStorage.setItem( 'tab-box-front-' + widget_count + 'couponapp_close_widget', 'yes');
+				}
+
+				/* Hide Tab after Conversation */
+				if ( jQuery( '#tab-box-front-' + widget_count ).hasClass( 'couponapp-tab-hide' ) ) {
+
+					localStorage.setItem( 'tab-box-front-' + widget_id + '-couponapp_tab_hide', 'yes');
+				}
+
+
+			});
+
+			/* Click event for Coupon Code link */
+			jQuery(document).on( "click touch", ".coupon-code-link" , function(e){
+
+				var widget_id = jQuery(this).data('widget-id');
+				var shop_id = jQuery(this).data('shop-id');
+				var couponget = widget_id +'-'+shop_id;
+				var widget_count = jQuery(this).data('widget-count');
+				var is_updatecouponcodeget = localStorage.getItem( 'is_updatecouponcodeget' + couponget);
+				if ( !jQuery( this ).hasClass( "couoncode-copied" ) && is_updatecouponcodeget != 'yes' ) {
+					updatecouponcodeget(jQuery, widget_id, shop_id);
+					localStorage.setItem( 'is_updatecouponcodeget'+couponget, 'yes');
+				}
+
+				if ( typeof jQuery( '#tab-box-front-' +widget_count ).data('close-widget') != 'undefined') {
+					var close_widget_seconds = jQuery( '#tab-box-front-' +widget_count ).data('close-widget') * 1000;
+
+					var close_widget_after_seconds = function(widget_count, jQuery){
+						jQuery('#tab-box-front-' +widget_count ).removeClass('couonapp-active');
+						localStorage.setItem( 'tab-box-front-' + widget_count + 'couponapp_close_widget', 'yes');
+					};
+					setTimeout(close_widget_after_seconds, close_widget_seconds, widget_count, jQuery);
+				}
+				if ( jQuery( '#tab-box-front-' + widget_count ).hasClass('couponapp-open-state-open') ) {
+					localStorage.setItem( 'tab-box-front-' + widget_count + 'couponapp_close_widget', 'yes');
+					jQuery('#tab-box-front-' +widget_count ).removeClass('couonapp-active');
+				}
+
+				/* Hide Tab after Conversation */
+				if ( jQuery( '#tab-box-front-' + widget_id ).hasClass( 'couponapp-tab-hide' ) ) {
+					localStorage.setItem( 'tab-box-front-' + widget_id + '-couponapp_tab_hide', 'yes');
+				}
+
+				return true;
+			});
+
+
+			jQuery(document).on("click",".form-wrap .show-button",function(){
+
+				var action = jQuery(this).data("action");
+				var widgetCount = jQuery(this).data("widget-count");
+				var widget_id = jQuery(this).data('widget-id');
+
+				if (action == 'hide_widget') {
+					jQuery(".tab-box-front-wid-"+widget_id).hide();
+					localStorage.setItem( 'tab-box-front-' + widget_id + '-couponapp_tab_hide', 'yes');
+				} else {
+					let parent_id = jQuery(this).parents('.tab-box.tab-front-box');
+					let id 		  = jQuery(parent_id).attr('id');					
+					sessionStorage.setItem( id + 'couponapp_open', 'yes');
+					localStorage.setItem( id + 'couponapp_close_widget', 'yes');					
+				}
+			});
+
+			jQuery(document).on( "click", ".coupon-email-button" , function(e){
+				var $this 				= jQuery(this);
+				var coupon_widget_id 	= jQuery(this).data( 'widget-id' );
+				var widget_id			= jQuery( '#' + coupon_widget_id + ' .tab-box-email-content input[name="couponapp-email"]').data( 'widget-id' );
+				var shop_id				= jQuery( '#' + coupon_widget_id + ' .tab-box-email-content input[name="couponapp-email"]').data( 'shop-id' );
+				var email				= jQuery( '#' + coupon_widget_id + ' .tab-box-email-content input[name="couponapp-email"]').val();
+				var email_name			= jQuery( '#' + coupon_widget_id + ' .tab-box-email-content input[name="couponapp-name"]').val();
+				var coupon_code 		= jQuery(this).data('coupon-code');
+				var email_msg_color 	= jQuery(this).data( 'email-msgcolor' );
+				var firstlead_show 		= jQuery(this).data('firstlead-show');
+				var regex 				= /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+
+				var email_name_validaton = true
+				if ( jQuery( '#' + coupon_widget_id + ' .tab-box-email-content input[name="couponapp-name"]').length > 0) {
+					if ( jQuery( '#' + coupon_widget_id + ' .tab-box-email-content input[name="couponapp-name"]').attr( 'required' ) == 'required' && email_name == '' ) {
+						email_name_validaton = false;
+					}
+				}
+				if (!regex.test(email)) {
+					email = '';
+				}
+				/*
+				jQuery( '#' + coupon_widget_id + ' .tab-box-email-content').fadeOut(500);
+				jQuery( '#'+coupon_widget_id+' .tab-box-content.tab-box-couponcode-content').delay(500).fadeIn(6000);
+				jQuery( '#' + coupon_widget_id ).addClass('couponapp-email-coupon-code-show');
+				return false;
+				*/
+				var consent_id = jQuery( this).data( 'consent-id' );
+				var consent	= jQuery( this).data( 'consent' );
+				if ( consent == 1 && jQuery('#' + consent_id).prop("checked") == false &&  jQuery('#' + consent_id).attr('required') == 'required') {
+					return true;
+				} else if ( coupon_widget_id != '' && widget_id != '' && shop_id != '' && email != '' && email_name_validaton ) {
+					e.preventDefault();
+					localStorage.setItem( coupon_widget_id + 'couponapp_close_widget', 'yes');
+
+
+                    jQuery(this).attr('disabled', 'disabled');
+					jQuery(this).parent().find('.couponx-form-fields').append('<span class="coupon-email-loading" style="position: absolute;top: 0px;right: 0;bottom: 0;z-index: 9999999;width: 100%;max-height: 100%;background: rgba(000, 000, 000, 0.5); display:flex;justify-content: center;align-items: center;"><svg version="1.1" id="L9" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 100 100" enable-background="new 0 0 0 0" xml:space="preserve" style="height: 35px;width: 100%;"><path fill="#fff" d="M73,50c0-12.7-10.3-23-23-23S27,37.3,27,50 M30.9,50c0-10.5,8.5-19.1,19.1-19.1S69.1,39.5,69.1,50"><animateTransform attributeName="transform" attributeType="XML" type="rotate" dur="1s" from="0 50 50" to="360 50 50" repeatCount="indefinite"></animateTransform></path></svg> </span>');
+
+                    var couponappurl = couponapp_domain + 'front/sendemail?fullpathName='+encodeURI(fullpathName);
+
+					jQuery.ajax({
+						type: "POST",
+						url: couponappurl,
+						data: {
+								'email': email,
+								'name': email_name,
+								'widget_id' : widget_id,
+								'shop_id' : shop_id,
+								'shop_url': shopurl,
+								'coupon_code' : ( coupon_code != '' ) ? coupon_code : '',
+								'is_consent': (jQuery('#' + consent_id).length != 0 && jQuery('#' + consent_id).prop("checked") == true ) ? 1 : 0,
+							},
+						dataType: "JSON",
+						success: function (response) {
+
+                            $this.removeAttr('disabled');
+							jQuery('.coupon-email-loading').remove();
+
+							if ( response.error == true && response.errors != '' ) {
+								jQuery( '#' + coupon_widget_id + ' .tab-box-email-content p.coupon-email-error').remove();
+								jQuery( '#' + coupon_widget_id + ' .tab-box-email-content .form-wrap.form-email-field-wrap').after('<p class="coupon-email-error" style="color: ' + email_msg_color +'; font-size: 12px;">'+ response.errors +'</p>');
+
+								setTimeout(function () {
+									jQuery('#' + coupon_widget_id + ' .tab-box-email-content p.coupon-email-error').slideUp("slow");
+
+								}, 5000);
+							}
+							if ( response.show_coupon === true ) {
+
+								jQuery( '#' + coupon_widget_id + ' .tab-box-email-content').fadeOut(500);
+
+								if(jQuery("#"+coupon_widget_id).hasClass("couponapp-style-5")){
+
+									jQuery( '#'+coupon_widget_id+' .tab-box-content.tab-box-couponcode-content.tab-announcement').delay(500).fadeIn(1000);
+								}else{
+									var discount_code = response.discount_code;
+									var coupon_code_text = jQuery( '#' + coupon_widget_id + ' .tab-box-couponcode-content .coupon-code-text').html().replace("uniquecode", discount_code);
+									jQuery( '#' + coupon_widget_id + ' .tab-box-couponcode-content .coupon-code-text').html( coupon_code_text.replace("uniquecode", discount_code));
+									createCouponappCookie('couponx_unique-'+widget_id, discount_code, 365);
+
+									jQuery( '#' + coupon_widget_id + ' .tab-box-couponcode-content').delay(500).fadeIn(1000);
+
+								}
+								jQuery( '#' + coupon_widget_id ).addClass('couponapp-email-coupon-code-show');
+								var show_widget_coupon_code = function(coupon_widget_id){
+									jQuery( '#' + coupon_widget_id + ' .tab-box-email-content').remove();//remove email screen
+									setCountDownTimer(jQuery);
+								};
+								setTimeout(show_widget_coupon_code, 600, coupon_widget_id);
+								createCouponappCookie(coupon_widget_id + 'show_coupon_code' , 'yes', 30);
+							}
+						}
+					});
+
+					return false;
+				} else {
+					if ( consent == 1 && jQuery('#' + consent_id).prop("checked") == false &&  jQuery('#' + consent_id).attr('required') == 'required') {
+						return true;
+					}
+
+					if ( email == '' ) {
+						return true;
+					}
+					if ( email_name == '' ) {
+						return true;
+					}
+				}
+
+				return false;
+			});
+
+
+			jQuery(document).on( "click touch", ".couponapp-open-state-open .tab-icon" , function(e){
+				var id = jQuery(this).parent().parent().attr( 'id' );
+				if ( isCXMobile === true ) {
+					jQuery( '#' + id ).removeClass( "couponapp-open-state-open" );
+				}
+				if ( jQuery( '#' + id ).hasClass( "couonapp-active" ) ) {
+					jQuery( '#' + id ).removeClass( "couonapp-active" )
+					sessionStorage.setItem( id + 'couponapp_pending_message', 'yes');
+					localStorage.setItem( id + 'couponapp_close_widget', 'yes');
+					jQuery('#' + id + ' .coupon-pending-message').remove();
+					if ( jQuery( '#' + id ).hasClass( "couponapp-open-always" ) ) {
+						jQuery('#' + id + ' .tab-text').show();
+					}
+				} else {
+					jQuery( '#' + id ).addClass( "couonapp-active" )
+				}
+			});
+
+			jQuery(document).on( "click touch", "#coupon_ownerpopup .coupon_ownerpopupclose" , function(e){
+				if (jQuery(this).hasClass('coupon_riskabovefourdays') && !jQuery(this).hasClass('coupon_eventsopen')) {
+					jQuery(this).addClass('coupon_eventsopen');
+					jQuery("body .formappownerpopup .coupon_content, body .formappownerpopup .coupon_footer").hide();
+					jQuery("body .formappownerpopup .coupon_content.coupon_reskmoreevents").show();
+				} else if (jQuery(this).hasClass('coupon_eventsopen')) {
+					coupon_ownerevent(jQuery,'dont_remind_me');
+					jQuery("body #coupon_ownerpopup").hide();
+				} else {
+					jQuery("body #coupon_ownerpopup").hide();
+					coupon_ownerevent(jQuery,'click_on_x');
+				}
+			})
+
+			jQuery(document).on( "click touch", ".coupon_ownerremind .coupon_remind" , function(e){
+				coupon_ownerevent(jQuery,'clicked_on_remind_me');
+				jQuery("body #coupon_ownerpopup").hide();
+			}),
+
+			jQuery(document).on( "click touch", ".coupon_ownerremind .coupon_dontremind" , function(e){
+				coupon_ownerevent(jQuery,'dont_remind_me');
+				jQuery("body #coupon_ownerpopup").hide();
+			}),
+
+			jQuery(document).on( "click touch", ".coupon_upgradenow" , function(e){
+				coupon_ownerevent(jQuery,'click_on_upgrade');
+				jQuery("body #coupon_ownerpopup").hide();
+			})
+
+			jQuery(document).mouseleave(function (e) {
+				var top = e.clientY;
+				var right = document.body.clientWidth - e.pageX;
+				var bottom = jQuery(window).height() - e.clientY;
+				var left = e.pageX;
+				if(right > 0 && bottom > 0 && top <=0){
+					jQuery('.tab-front-box.couponapp-desktop').each(function(i, val) {
+						var is_exit = jQuery(this).data('isexit');
+						var widget_id = jQuery(this).data("widgetid");
+						if(is_exit == 'yes'){
+							var exist_popup = readCouponappCookie('couponx-exist-'+ widget_id);
+							if( exist_popup == null ) {
+								var id = jQuery(this).attr( 'id' );
+								var shop_id = jQuery(this).data( 'shop_id' );
+
+								crearteCouponUniqueCode(jQuery, widget_id, shop_id, id);
+								setCountDownTimer(jQuery);
+								jQuery(this).show();
+								jQuery(this).addClass('couonapp-active');
+								jQuery(this).addClass('couponapp-open-state-click');
+
+								createCouponappCookie('couponx-exist-'+ widget_id, 'yes' , 1);
+
+								if ( jQuery( this ).hasClass( "coupon-pending-message" )) {
+									sessionStorage.setItem( id + 'couponapp_pending_message', 'yes');
+									jQuery('#' + id + ' .coupon-pending-message').remove();
+								}
+
+								jQuery( '#' + id ).removeClass (function (index, className) {
+									if ( jQuery('#tab-box-front-' + index).data('animation-effect') == 'hide_attention_effect' ){
+										return (className.match (/(^|\s)couponapp-\S+-animation/g) || []).join(' ');
+									} else {
+										return;
+									}
+								});
+
+								/* Save Close in Session Storage */
+								var session_tab = sessionStorage.getItem(id + 'couponapp_close');
+								if ( session_tab === 'close' ) {
+									jQuery('#' + id + ' .tab-text').hide();
+								}
+								if ( jQuery( '#' + id ).hasClass( "couponapp-open-first" ) ) {
+									sessionStorage.setItem( id + 'couponapp_close', 'close');
+									jQuery('#' + id + ' .tab-text').hide();
+								}
+								sessionStorage.setItem( id + 'couponapp_open', 'yes');
+								sessionStorage.setItem( i + 'couponapp_show', 'yes');
+
+								var main_width = jQuery(this).find( '.tab-box-email-content .form-wrap').outerWidth();
+								var button_width = jQuery(this).find( '.coupon-button.coupon-email-button').outerWidth();
+								if ( typeof main_width !== 'undefined' && typeof button_width !== 'undefined') {
+									//jQuery(this).find('.coupon-code-email-text').width( main_width - button_width - 37 );
+									jQuery(this).find('.coupon-code-email-text').width( '100%' );
+									jQuery(this).find('.couponx-large-email-btn .coupon-code-email-text.coupon-code-email-field').width('100%' );
+								}
+
+							}
+						}
+					});
+				}
+			});
+
+			/* Show Coupon Code when the user click on Claim button*/
+			jQuery(document).on( "click touch", ".couponx-coupon-claim-form-wrap button.coupon-claim-button" , function(e){
+				jQuery(".couponx-coupon-form-wrap, .coupon-button.copy-to-clipboard.coupon-large-button").show();
+				jQuery(".couponx-coupon-claim-form-wrap").hide();
+				let widget_id 	= jQuery(this).parents( '.couponapp-coupon-claim.tab-front-box').data( 'widgetid' );
+				let shop_id 	= jQuery(this).parents( '.couponapp-coupon-claim.tab-front-box').data( 'shop_id' );
+				let id 			= jQuery(this).parents( '.couponapp-coupon-claim.tab-front-box').attr( 'id' );
+				if ( jQuery(this).parents( '.couponapp-coupon-claim.tab-front-box').hasClass( 'couponapp-coupon-claim' ) ) {
+					jQuery(this).parents( '.couponapp-coupon-claim.tab-front-box').removeClass( 'couponapp-coupon-claim' )
+				}
+				crearteCouponUniqueCode(jQuery, widget_id, shop_id, id);
+			})
+
+		});
+	}
+
+	/* Load jQuery Script */
+	if ((typeof jQuery === 'undefined') || (parseFloat(jQuery.fn.jquery) < 1.7)) {
+
+		loadScript('//ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js', function(){
+			var COUPONAPPS = jQuery.noConflict(true);
+			COUPONAPPS(document).ready(function() {				
+				CouponAppJavaScript(COUPONAPPS);
+				CouponAppReadyJavaScript(COUPONAPPS);
+			});
+		});
+	} else {		
+		CouponAppJavaScript(jQuery);
+		CouponAppReadyJavaScript(jQuery);
+	}
+
+	function shopifylanguageRoute() {
+		var shopify_lang_route = "/";
+		if ( typeof Shopify !== 'undefined' && Shopify.routes && Shopify.routes.root ) {
+			shopify_lang_route = Shopify.routes.root;
+		}
+		return shopify_lang_route;
+	}
+	
+	(function(ns, fetch) {
+		if (typeof fetch !== 'function') return;
+		ns.fetch = function() {
+			const response = fetch.apply(this, arguments);
+			response.then(res => {
+				var shopify_lang_route = shopifylanguageRoute();
+				if ([
+					`${window.location.origin}`+ shopify_lang_route+ `cart/add.js`,
+					`${window.location.origin}`+ shopify_lang_route+ `cart/add`,
+					//`${window.location.origin}`+ shopify_lang_route+ `cart/update.js`,
+					//`${window.location.origin}`+ shopify_lang_route+ `cart/update`,
+					`${window.location.origin}`+ shopify_lang_route+ `cart/change.js`,
+					`${window.location.origin}`+ shopify_lang_route+ `cart/change`,
+					`${window.location.origin}`+ shopify_lang_route+ `cart/clear.js`,
+					`${window.location.origin}`+ shopify_lang_route+ `cart/clear`,
+				].includes(res.url)) {					
+					if ( is_trigger_cart == true ) {
+						if ( typeof jQuery !== 'undefined' ) {
+							res.clone().json().then(data => CouponAppJavaScript(jQuery, true));
+						} else {
+							res.clone().json().then(data => CouponAppJavaScript(COUPONAPPS, true));
+						}
+					}
+				}
+			});
+
+			return response;
+		}
+
+	}(window, window.fetch))
+	
+
+})();
+
+function close_couponx() {
+	var loadScript_widget = function(url, callback){
+		var script = document.createElement("script");
+		script.type = "text/javascript";
+		// If the browser is Internet Explorer.
+		if (script.readyState){
+
+			script.onreadystatechange = function(){
+				if (script.readyState == "loaded" || script.readyState == "complete"){
+					script.onreadystatechange = null;
+					callback();
+				}
+			};
+			// For any other browser.
+		} else {
+			script.onload = function(){
+				callback();
+			};
+		}
+		script.src = url;
+		document.getElementsByTagName("head")[0].appendChild(script);
+	};
+	loadScript_widget('//ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js', function(){
+		COUPONAPPS = jQuery.noConflict(true);
+		COUPONAPPS('.tab-box.tab-front-box').removeClass('couonapp-active');
+		COUPONAPPS('.tab-box.tab-front-box').each(function(){
+
+		COUPONAPPS(this).removeClass('couonapp-active');
+
+		});
+	});
+}
+
+var get_ab_widget_count = function ( jQuery,IndexID) {
+
+	var widget_id = couponapp_settings.couponapp_widgets[IndexID].widget_id;
+	var shop_id = couponapp_settings.couponapp_widgets[IndexID].shop_id;
+
+	url = couponapp_domain + 'front/getabwidgetscount';
+	jQuery.ajax({
+		type: "POST",
+		url: url,
+		data: {'shop_url': shopurl,'widget_id':widget_id,"shop_id":shop_id},
+		success: function (response) {
+
+		}
+	});
+}
+function launch_couponx( widget_no = 1 ) {
+	launch_coupon_x( widget_no );
+}
+
+function launch_coupon_x( widget_no = 1 ) {
+	var count = 1;
+
+	var loadScript_widget = function(url, callback){
+		var script = document.createElement("script");
+		script.type = "text/javascript";
+
+		// If the browser is Internet Explorer.
+		if (script.readyState){
+
+			script.onreadystatechange = function(){
+				if (script.readyState == "loaded" || script.readyState == "complete"){
+					script.onreadystatechange = null;
+					callback();
+				}
+			};
+			// For any other browser.
+		} else {
+			script.onload = function(){
+				callback();
+			};
+		}
+		script.src = url;
+		document.getElementsByTagName("head")[0].appendChild(script);
+	};
+
+	loadScript_widget('//ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js', function(){
+		COUPONAPPS = jQuery.noConflict(true);
+		COUPONAPPS('.tab-box.tab-front-box').removeClass('couonapp-active');
+		COUPONAPPS('.tab-box.tab-front-box').each(function(){
+
+			if ( widget_no == count) {
+				COUPONAPPS(this).addClass('couonapp-active');
+				var widgetid = COUPONAPPS(this).attr( 'id' );
+				var widget_id = COUPONAPPS('#' + widgetid + ' .tab-box-wrap .tab-icon').data('widget-id');
+				var shop_id = COUPONAPPS('#' + widgetid + ' .tab-box-wrap .tab-icon').data('shop-id');
+				var coupon_code_option = COUPONAPPS('#' + widgetid + ' .tab-box-wrap .tab-icon').data('coupon-code-option');
+				var discoun_code = COUPONAPPS('#' + widgetid + ' .tab-box-wrap .tab-icon').data('discoun-code');
+
+				unique_code = '';
+				var nameEQ = escape('couponx_unique') + "=";
+				var ca = document.cookie.split(';');
+				for (var i = 0; i < ca.length; i++) {
+					var c = ca[i];
+					while (c.charAt(0) == ' ')
+					c = c.substring(1, c.length);
+					if (c.indexOf(nameEQ) == 0)
+					unique_code = unescape(c.substring(nameEQ.length, c.length));
+				}
+
+				var couponapp_email = COUPONAPPS( '#' + widgetid + ' .coupon-code-email-text input[name="couponapp-email"]' ).length;
+
+				if ( unique_code == '' && couponapp_email != '1' ) {
+
+					var couponappurl = couponapp_domain + 'front/checkcouponcode?fullpathName='+encodeURI(fullpathName);
+					COUPONAPPS( '#' + widgetid + ' .tab-box-couponcode-content .coupon-code-text').hide();
+					COUPONAPPS.ajax({
+						type: "POST",
+						url: couponappurl,
+						data: {
+								'widget_id' : widget_id,
+								'shop_id' : shop_id,
+								'shop_url': shopurl
+							},
+						dataType: "JSON",
+						success: function (response) {
+							if ( response.show_coupon === true ) {
+								var discount_code = response.discount_code;
+								var coupon_code_text = COUPONAPPS( '#' + widgetid + ' .tab-box-couponcode-content').html().replace("uniquecode", discount_code);
+								COUPONAPPS( '#' + widgetid + ' .tab-box-couponcode-content').html( coupon_code_text.replace("uniquecode", discount_code));
+								name = 'couponx_unique';
+								value = discount_code;
+								days = 365;
+								if (days) {
+									var expiry = new Date();
+									expiry.setTime(expiry.getTime()+(days*24*60*60*1000));
+									var expires = "; expires=" + expiry.toGMTString();
+								} else {
+									var expires = "";
+								}
+								document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/; SameSite=Lax";
+								COUPONAPPS( '#' + widgetid + ' .tab-box-couponcode-content .coupon-code-text').show();
+							}
+						}
+					});
+				}
+
+				var coupon_open = widget_id +'-'+shop_id;
+				var is_updatecouponopen = localStorage.getItem( 'is_updatecouponopen' + coupon_open);
+				if ( is_updatecouponopen != 'yes' ) {
+					url = couponapp_domain + 'front/updatecouponopen';
+					COUPONAPPS.ajax({
+						type: "POST",
+						url: url,
+						data: {'shop_url': shopurl,'widget_id':widget_id,"shop_id":shop_id},
+						success: function (response) {
+
+						}
+					});
+
+					localStorage.setItem( 'is_updatecouponopen' + coupon_open, 'yes');
+				}
+				return false;
+			}
+			count++;
+		});
+	});
+}
+
+function couponx_expired( coupon_code, jQuery) {
+	 jQuery.ajax({
+		type: "POST",
+		url: couponapp_domain + 'couponapp_front/expiredcouponcode',
+		data: {
+				'coupon_code': coupon_code,
+				'shop_url': shopurl,
+			},
+		dataType: "JSON",
+		success: function (response) {
+
+		}
+	});
+}

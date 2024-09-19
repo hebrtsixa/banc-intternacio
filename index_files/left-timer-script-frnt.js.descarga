@@ -1,0 +1,231 @@
+/**
+ * Config Settings
+ *
+ * @returns {array}
+ */
+function config() {
+
+    var $config = [];
+    $config.loadingBars = '.countdown-bar';
+
+    // Countdown Loading Bar
+    $config.loadingBars_width = 404;
+    $config.loadingBars_height = 6;
+    
+	
+    // Countdown Timer
+    $config.timer_color = '#C0392B';
+    $config.timer_font_weight = 700;
+    $config.timer_font_size = 12;
+    $config.endtime_message = '';
+    
+    return $config;
+}
+
+/**
+ * Set countdown element
+ *
+ * Element should be build as
+ * <div class="countdownbar" id="elementID">
+ * <div></div>
+ * <div></div>
+ * </div>
+ *
+ * Then call the function countdown('elementID', 0, 0, 0, 10)
+ *
+ * @param {string} $element
+ * @param {number} $daysAdd
+ * @param {number} $hoursAdd
+ * @param {number} $minutesAdd
+ * @param {number} $secondsAdd
+ */
+function countdown($element,data,jQuery) {
+	var interval='';	
+    $config = this.config();
+	$dateNow = new Date();
+    jQuery($config.loadingBars).css('width', $config.loadingBars_width);
+    jQuery($config.loadingBars).css('height', $config.loadingBars_height);
+    jQuery($config.loadingBars).css('background-color', $config.loadingBars_background_color);
+    jQuery($config.loadingBars).css('border-color', $config.loadingBars_border_color);
+	
+	$now_loader = new Date().getTime();
+
+    var timezone = '';
+	timezone = data["timezone"];
+
+    var num = /^[-+]?[0-9]+\.[0-9]+$/;
+    var plus_number = /^[-+]?[0-9]+$/;	
+    timezone = timezone.toString().replace("-", "");
+
+	if( data['timer_form'] == 'popup'){
+		timezone = '';
+	}
+
+	if( timezone != '' && timezone != false){
+
+        if( num.test(timezone) == true || plus_number.test(timezone) == true ) {
+            $now_loader = getCurrentDateTimeGMT(timezone)
+        }else{
+            $now_loader =  new Date($dateNow.toLocaleString('en-US', {timeZone: timezone}));
+        }
+    }
+
+    clearInterval(interval);
+	interval = null;
+	interval = setInterval(function() {
+		
+		var width 			= parseInt(jQuery(".count-down-timer-box.lefttimer_coundown").width()) - 96;
+		var disable_coupon_code = data["disable_coupon_code"];
+		var renderTimerBox		= data["renderTimerBox"];		
+        $loadingBars_loader = jQuery("#"+$element).children('div')[0];
+        $loadingBars_timer 	= jQuery('.countdown-timer-block');
+		
+		$config.loadingBars_width = parseInt(width);
+		width = width+"px";
+		jQuery("div.countdown-bar").css("width",width);
+		
+        $expiredDateTime = data['expired_date_time'];
+		$countDownDate = new Date($expiredDateTime);
+	    $now = new Date();
+		
+		if( timezone != '' && timezone != false){
+			if( num.test(timezone) == true || plus_number.test(timezone) == true ) {
+                $now = getCurrentDateTimeGMT(timezone)
+            }else{
+                $now =  new Date($now.toLocaleString('en-US', {timeZone: timezone}));
+            }	
+        }
+		$now = $now.getTime();
+        $distance = $countDownDate.getTime() - $now;
+	    if($distance < 0  || isNaN($distance)){
+			
+			clearInterval(interval);
+			$timerHtmlStart = '<span style="color:'+txtColor+'">00:00';
+			$timerHtmlEnd = '</span>';
+			jQuery($loadingBars_timer).html($timerHtmlStart + $timerHtmlEnd );
+            jQuery("div.countdown-bar div:nth-of-type(1)").css("width","100%");			
+			if ( disable_coupon_code == 1 ) {
+				if ( jQuery(renderTimerBox).parents().find('.tab-box.tab-front-box').hasClass( 'couponapp-style-3')  ) {
+					jQuery(renderTimerBox).parents().find('.tab-box.tab-front-box').removeClass( 'couponapp-style-3').addClass( 'couponapp-style-1')
+					var coupon_code_text = jQuery(renderTimerBox).parents().find('.tab-box.tab-front-box').find('.form-wrap.clear a').data( 'coupon');
+					var coupon_type = jQuery(renderTimerBox).parents().find('.tab-box.tab-front-box').find('.form-wrap.clear a').data( 'coupon-type');
+					jQuery(renderTimerBox).parents().find('.tab-box.tab-front-box').find('.form-wrap.clear').html('<div class="coupon-code-text"><span class="couponx-error">Oops! Coupon code expired</span></div><svg class="vector" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" style="fill:#635EFF;"><path d="M4.584 3.384C4.722 3.084 4.8 2.754 4.8 2.4C4.8 1.074 3.726 0 2.4 0C1.074 0 0 1.074 0 2.4C0 3.726 1.074 4.8 2.4 4.8C2.754 4.8 3.084 4.722 3.384 4.584L4.8 6L3.384 7.416C3.084 7.278 2.754 7.2 2.4 7.2C1.074 7.2 0 8.274 0 9.6C0 10.926 1.074 12 2.4 12C3.726 12 4.8 10.926 4.8 9.6C4.8 9.246 4.722 8.916 4.584 8.616L6 7.2L10.2 11.4H12V10.8L4.584 3.384ZM2.4 3.6C1.74 3.6 1.2 3.066 1.2 2.4C1.2 1.734 1.74 1.2 2.4 1.2C3.06 1.2 3.6 1.734 3.6 2.4C3.6 3.066 3.06 3.6 2.4 3.6ZM2.4 10.8C1.74 10.8 1.2 10.266 1.2 9.6C1.2 8.934 1.74 8.4 2.4 8.4C3.06 8.4 3.6 8.934 3.6 9.6C3.6 10.266 3.06 10.8 2.4 10.8ZM6 6.3C5.832 6.3 5.7 6.168 5.7 6C5.7 5.832 5.832 5.7 6 5.7C6.168 5.7 6.3 5.832 6.3 6C6.3 6.168 6.168 6.3 6 6.3ZM10.2 0.6L6 4.8L7.2 6L12 1.2V0.6H10.2Z" fill="#635EFF/"></path></svg>');	
+				} else {
+					var coupon_code_text = jQuery(renderTimerBox).parents('.couponx-preview').find('input.copy-coupon-inputcode').val();
+					var coupon_type = jQuery(renderTimerBox).parents('.couponx-preview').find('input.copy-coupon-inputcode').data( 'coupon-type');
+				}
+				if ( coupon_code_text != '' && coupon_type == 'unique-coupon'  ) {							
+					couponx_expired(coupon_code_text, jQuery)
+				}
+				jQuery(renderTimerBox).parents('.couponx-preview').find('.coupon-button.copy-to-clipboard').remove();
+				jQuery(renderTimerBox).parents('.couponx-preview').find('.coupon-code-text').html("<span class='couponx-error'>Oops! Coupon code expired</span>");
+				jQuery(renderTimerBox).addClass( 'couponx-code-expired');
+			}
+            return;
+		}
+
+
+        $distance_loader = $countDownDate.getTime() - $now_loader;
+        $distance_loadingBar_part =  (($config.loadingBars_width / ($distance_loader - 1000)) * 1000);
+        $distance_loadingBar_part = Math.floor($distance_loadingBar_part * 10000) / 10000;
+		
+		$secondsPast = parseInt(($distance_loader - $distance) / 1000);
+
+        $newDistance  = $distance_loadingBar_part * $secondsPast;
+        if($newDistance > $config.loadingBars_width) $newDistance = $config.loadingBars_width;
+        jQuery($loadingBars_loader).animate({ width: $newDistance + 'px' }, 100);
+		
+        var txtColor = data['txtcolor'];				
+		
+        // TIMER
+        $timerHtmlStart = '<span style="color:'+txtColor+'">';
+        $timerHtmlEnd = '</span>';
+		// set loading bar background-color as set in config
+		
+        jQuery($loadingBars_loader).css('background-color', $config.loadingBars_color);
+        
+        // SET LOADING-BAR
+          if($distance < 0  || isNaN($distance)) {
+
+			$config.endtime_message = "00:00";
+            jQuery($loadingBars_timer).html($timerHtmlStart + $config.endtime_message + $timerHtmlEnd);
+            jQuery("div.countdown-bar div:nth-of-type(1)").css("width","100%")
+            clearInterval(interval);
+            return;
+        } else {
+            $timeLeftFinal = setTimer($distance);
+            jQuery($loadingBars_timer).html($timerHtmlStart + $timeLeftFinal + $timerHtmlEnd);
+		}
+		
+		
+    }, 1000);
+}
+
+function getCurrentDateTimeGMT(timezone){
+    var localDate = new Date();
+    var localTime = localDate.getTime();
+    var localOffset = localDate.getTimezoneOffset() * 60000;
+    var utc = localTime + localOffset;
+    var offset = timezone;  
+    var utc_offset = utc + (3600000 * offset);
+    localDate = new Date(utc_offset); 
+    return localDate;
+}
+
+function createCouponappAdminCookie(name, value, days){
+	if (days) {
+		var expiry = new Date();
+		expiry.setTime(expiry.getTime()+(days*24*60*60*1000));
+		var expires = "; expires=" + expiry.toGMTString();
+	} else {
+		var expires = "";
+	}
+	document.cookie = escape(name) + "=" + escape(value) + expires + "; path=/; SameSite=Lax";
+}
+
+/**
+ * Set the timer compared to what date it is and what time is set for it.
+ *
+ * @param {timstamp} $distance
+ */
+function setTimer($distance) {
+    // Time calculations for days, hours, minutes and seconds
+
+
+
+    var days = Math.floor($distance / (1000 * 60 * 60 * 24));
+    var hours = Math.floor(($distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    var minutes = Math.floor(($distance % (1000 * 60 * 60)) / (1000 * 60));
+    var seconds = Math.floor(($distance % (1000 * 60)) / 1000);
+
+    if(hours < 10) {
+        hours = "0" + hours;
+    }
+
+    if(minutes < 10) {
+        minutes = "0" + minutes;
+    }
+
+    if(seconds < 10) {
+        seconds = "0" + seconds;
+    }
+
+    var timeLeft = hours + ":" + minutes + ":" + seconds;
+
+    if( hours <= 0 ){
+        timeLeft = minutes + ":" + seconds;
+    }
+	/*
+	else if( minutes <= 0 ){
+        timeLeft = minutes + ":" + seconds;
+    }
+	*/
+    if(days !== 0) {
+        var timeLeftFinal = days + ":" + timeLeft;
+    } else {
+        var timeLeftFinal = timeLeft;
+    }
+
+    return timeLeftFinal;
+}
+

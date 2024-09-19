@@ -1,0 +1,2 @@
+var bcSfSearchSettings={search:{}};BCSfFilter.prototype.customizeSuggestion=function(suggestionElement,searchElement,searchBoxId){jQ(".fancybox-overlay").length>0&&(jQ(suggestionElement).parent().css({position:"fixed"}),jQ(suggestionElement).css({"overflow-y":"scroll",height:"300px"}))};
+//# sourceMappingURL=/cdn/shop/t/9/assets/bc-sf-search.js.map?v=179905203430829464201629312252

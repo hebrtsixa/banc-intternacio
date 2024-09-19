@@ -1,0 +1,72 @@
+
+    (function() {
+      var baseURL = "https://cdn.shopify.com/shopifycloud/checkout-web/assets/";
+      var scripts = ["https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/polyfills.BqD-ScDQ.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/app.BiGaTap-.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/VaultedContact.DSU_OnWP.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/DeliveryMethodSelectorSection.CMm7iZTh.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/VaultedDeliveryAddress.BtLqf6u0.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/Rollup.DrRAcCEv.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/useUnauthenticatedErrorModal.CKDuJhzr.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/ShopPayLogo.DZ5GztiJ.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/PurchaseOptionsAgreement.CybAEFJ-.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/Option.CX2fhagD.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/PickupPointCarrierLogo.Cygni3Xy.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/hooks.DptdJ6Id.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/LegacyVaultedShippingMethods.Dr_1Eg9N.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/OnePageModal.BUiY77Qj.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/useShowShopPayOptin.DDv5R7N_.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/Section.C52pScrP.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/google-pay.BiD6Qsgl.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/PayButtonSection.F3LBj-KB.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/context.Drxsekfy.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/publishMessage.CzB0x9Ob.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/DutyOptions.CZ4Xa_v5.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/SubscriptionPriceBreakdown.CZOJGTv-.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/StockProblemsLineItemList.CS92iGZ5.js","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/component-ShopPayVerificationSwitch.DXkPg2r0.js"];
+      var styles = ["https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/app.C21eQH_k.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/VaultedContact.CxMuAABI.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/DeliveryMethodSelectorSection.CElxpDlW.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/Rollup.o9Mx-fKL.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/useUnauthenticatedErrorModal.DnkQ4tsk.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/ShopPayLogo.D_HPU8Dh.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/Option.BgrbqXV7.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/PickupPointCarrierLogo.C0wRU6wV.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/LegacyVaultedShippingMethods.-UsM8FFz.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/Section.sQehCocD.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/google-pay.D-Ox6Dnf.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/PayButtonSection.DF7trkKf.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/DutyOptions.Bd1Z60K2.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/SubscriptionPriceBreakdown.Bqs0s4oM.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/StockProblemsLineItemList.CxdIQKjw.css","https://cdn.shopify.com/shopifycloud/checkout-web/assets/c1.es/assets/ShopPayVerificationSwitch.CAxiAssW.css"];
+      var fontPreconnectUrls = [];
+      var fontPrefetchUrls = [];
+      var imgPrefetchUrls = ["https://cdn.shopify.com/s/files/1/0408/1143/0046/files/logo-castaner-actualizo_x320.png?v=1613551506"];
+
+      function preconnect(url, callback) {
+        var link = document.createElement('link');
+        link.rel = 'dns-prefetch preconnect';
+        link.href = url;
+        link.crossOrigin = '';
+        link.onload = link.onerror = callback;
+        document.head.appendChild(link);
+      }
+
+      function preconnectAssets() {
+        var resources = [baseURL].concat(fontPreconnectUrls);
+        var index = 0;
+        (function next() {
+          var res = resources[index++];
+          if (res) preconnect(res, next);
+        })();
+      }
+
+      function prefetch(url, as, callback) {
+        var link = document.createElement('link');
+        if (link.relList.supports('prefetch')) {
+          link.rel = 'prefetch';
+          link.fetchPriority = 'low';
+          link.as = as;
+          if (as === 'font') link.type = 'font/woff2';
+          link.href = url;
+          link.crossOrigin = '';
+          link.onload = link.onerror = callback;
+          document.head.appendChild(link);
+        } else {
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', url, true);
+          xhr.onloadend = callback;
+          xhr.send();
+        }
+      }
+
+      function prefetchAssets() {
+        var resources = [].concat(
+          scripts.map(function(url) { return [url, 'script']; }),
+          styles.map(function(url) { return [url, 'style']; }),
+          fontPrefetchUrls.map(function(url) { return [url, 'font']; }),
+          imgPrefetchUrls.map(function(url) { return [url, 'image']; })
+        );
+        var index = 0;
+        (function next() {
+          var res = resources[index++];
+          if (res) prefetch(res[0], res[1], next);
+        })();
+      }
+
+      function onLoaded() {
+        preconnectAssets();
+        prefetchAssets();
+      }
+
+      if (document.readyState === 'complete') {
+        onLoaded();
+      } else {
+        addEventListener('load', onLoaded);
+      }
+    })();
+  
